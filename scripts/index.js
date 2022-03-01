@@ -1,5 +1,7 @@
 let x = document.getElementsByClassName("bar");
 
+//test
+
 const mobileNav = () => {
     let checkBox = document.getElementById("myCheck");
     let y = document.getElementById("burger");
