@@ -1,6 +1,6 @@
 let x = document.getElementsByClassName("bar");
 
-//testt
+//testtt
 
 const mobileNav = () => {
     let checkBox = document.getElementById("myCheck");
