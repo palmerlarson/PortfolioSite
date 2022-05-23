@@ -1,7 +1,23 @@
 @charset "UTF-8";
+.img-crisp {
+  image-rendering: -moz-crisp-edges;
+  /* Firefox */
+  image-rendering: -o-crisp-edges;
+  /* Opera */
+  image-rendering: -webkit-optimize-contrast;
+  /* Webkit (non-standard naming) */
+  image-rendering: crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  /* IE (non-standard property) */
+}
+
 body {
-  background-image: url("/background.a710ca65.jpg");
-  background-size: cover;
+  background: #ADA996;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #EAEAEA, #DBDBDB, #F2F2F2, #ADA996);
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #EAEAEA, #DBDBDB, #F2F2F2, #ADA996);
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
 .icon-img {
@@ -21,7 +37,9 @@ body {
   margin-left: auto !important;
 }
 
-.link-unstyled, .link-unstyled:link, .link-unstyled:hover {
+.link-unstyled,
+.link-unstyled:hover,
+.link-unstyled:link {
   color: inherit;
   text-decoration: inherit;
 }
@@ -59,28 +77,87 @@ body {
   opacity: 1;
 }
 
-.dark {
-  /* redefine theme colors for dark theme */
-  /* redefine theme color variables */
-  --bs-primary: #012345;
-  --bs-secondary: #111111;
-  --bs-success: #222222;
-  --bs-danger: #dc3545;
-  --bs-info: #6610f2;
-  --bs-dark: #121212;
-  --bs-light: #f8f9fa;
-  /* redefine theme color rgb vars (used for bg- colors) */
-  --bs-primary-rgb: 1, 35, 69;
-  --bs-secondary-rgb: 17, 17, 17;
-  --bs-success-rgb: 34, 34, 34;
-  --bs-danger-rgb: 220, 53, 69;
-  --bs-info-rgb: 102, 16, 242;
-  --bs-dark-rgb: 18, 18, 18;
-  --bs-light-rgb: 248, 249, 250;
-  --bs-body-color: #eeeeee;
-  --bs-body-bg: #121212;
+#feed {
+  width: 900px;
+  height: 600px;
 }
 
+.border-bottom-dark {
+  border-bottom: 1px solid black;
+}
+
+.border-top-dark {
+  border-top: 1px solid black;
+}
+
+.footer-div {
+  box-shadow: 0 -4px 6px -6px #222;
+}
+
+.dark {
+  color: white;
+  background: #0F2027;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #2C5364, #203A43, #0F2027);
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to right, #2C5364, #203A43, #0F2027);
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.light {
+  color: white !important;
+}
+
+.darkDiv {
+  background: black !important;
+}
+
+.darkGit.gha-header,
+.darkGit .gha-feed,
+.darkGit .gha-footer {
+  background: #161b22;
+  border-color: #333;
+  color: #c9d1d9;
+}
+.darkGit.gha-feed a {
+  background: #161b22;
+  color: #388bfd;
+}
+.darkGit.gha-header > .gha-github-icon,
+.darkGit .gha-header > .gha-user-info > a,
+.darkGit .gha-header > .gha-user-info > p > a {
+  color: #c9d1d9;
+}
+.darkGit.gha-activity {
+  border-color: #333;
+}
+.darkGit.gha-gravatar img {
+  border: 3px solid #333;
+  box-shadow: 0 0 0 #ccc;
+}
+.darkGit.gha-message-merge {
+  background: #242930;
+}
+.darkGit.gha-feed small, .darkGit.gha-feed .small {
+  color: #8b949e;
+}
+
+@media (min-width: 992px) {
+  .skills {
+    margin-left: 13%;
+  }
+
+  .card-img {
+    width: 100%;
+    height: 15vw;
+    object-fit: cover;
+  }
+
+  .card-text {
+    font-size: 1vw;
+    text-overflow: ellipsis;
+  }
+}
 /*!
  * Bootstrap v5.2.0-beta1 (https://getbootstrap.com/)
  * Copyright 2011-2022 The Bootstrap Authors

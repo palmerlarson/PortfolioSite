@@ -8396,22 +8396,68 @@ function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "functio
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-// theme switch example for demo
-document.getElementById('btnSwitch').addEventListener('click', function () {
+var init = function init() {
+  //initial check for dark desktop
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    themeChange();
+  } //if user swithces to dark mode via personal desktop
+
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
+    if (event.matches) {
+      themeChange();
+    }
+  });
+};
+
+window.onload = init;
+
+var themeChange = function themeChange() {
+  var light = document.querySelectorAll("a, span");
+  var dark = document.querySelectorAll(".card");
+  var cdn = document.getElementById("darkCDN");
+  var icon = document.getElementById("btnSwitch");
+
   if (document.body.classList.contains('dark')) {
     document.body.classList.remove('dark');
+    icon.innerHTML = "<i class=\"fa-solid fa-moon\"></i>";
+    cdn.href = "";
+
+    for (var i = 0; i < light.length; i++) {
+      light[i].classList.remove('light');
+    }
+
+    for (var _i = 0; _i < dark.length; _i++) {
+      dark[_i].classList.remove('darkDiv');
+    }
   } else {
     document.body.classList.add('dark');
-  }
+    cdn.href = "https://unpkg.com/github-activity-feed@latest/dist/github-activity.dark.min.css";
+    icon.innerHTML = "<i class=\"fa-solid fa-sun\"></i>";
 
-  document.getElementById('darkTheme').innerText = document.body.classList;
-});
+    for (var _i2 = 0; _i2 < light.length; _i2++) {
+      light[_i2].classList.add('light');
+    }
+
+    for (var _i3 = 0; _i3 < dark.length; _i3++) {
+      dark[_i3].classList.add('darkDiv');
+    }
+  }
+}; // theme switch
+
+
+document.getElementById('btnSwitch').addEventListener('click', themeChange);
 var typed = new Typed('#typed', {
   stringsElement: '#typed-strings',
   typeSpeed: 40,
   backSpeed: 20,
   backDelay: 3000,
   loop: true
+});
+GitHubActivity.feed({
+  username: "palmerlarson",
+  selector: "#feed",
+  limit: 20
 });
 },{"bootstrap":"../node_modules/bootstrap/dist/js/bootstrap.esm.js"}],"../../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -8441,7 +8487,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49854" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56665" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
