@@ -20,8 +20,15 @@ let themeChange = () => {
 	let dark = document.querySelectorAll(".card");
 	let cdn = document.getElementById("darkCDN");
 	let icon = document.getElementById("btnSwitch");
+	let navBottom = document.querySelector("nav");
+	let burger = document.querySelector(".hamburger");
+	let footerTop = document.querySelector(".footerTop");
 
 	if (document.body.classList.contains('dark')) {
+		burger.classList.remove("bg-white");
+		footerTop.classList.remove("border-top-light");
+		navBottom.classList.add('border-bottom-dark');
+		navBottom.classList.remove('border-bottom-light');
 		document.body.classList.remove('dark');
 		icon.innerHTML = `<i class="fa-solid fa-moon"></i>`;
 		cdn.href = ``;
@@ -34,8 +41,12 @@ let themeChange = () => {
 
 	} else {
 		document.body.classList.add('dark');
+		burger.classList.add("bg-white");
+		footerTop.classList.add("border-top-light");
+		navBottom.classList.add('border-bottom-light');
+		navBottom.classList.remove('border-bottom-dark');
 		cdn.href = `https://unpkg.com/github-activity-feed@latest/dist/github-activity.dark.min.css`;
-		icon.innerHTML = `<i class="fa-solid fa-sun"></i>`;
+		icon.innerHTML = `<i class="fa-solid fa-sun text-warning"></i>`;
 		for (let i = 0; i < light.length; i++) {
 			light[i].classList.add('light');
 		}
@@ -48,20 +59,6 @@ let themeChange = () => {
 
 // theme switch
 document.getElementById('btnSwitch').addEventListener('click', themeChange);
-
-var typed = new Typed('#typed', {
-	stringsElement: '#typed-strings',
-	typeSpeed: 40,
-	backSpeed: 20,
-	backDelay: 3000,
-	loop: true
-});
-
-GitHubActivity.feed({
-	username: "palmerlarson",
-	selector: "#feed",
-	limit: 20
-});
 
 
 

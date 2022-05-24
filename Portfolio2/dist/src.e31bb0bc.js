@@ -8417,8 +8417,15 @@ var themeChange = function themeChange() {
   var dark = document.querySelectorAll(".card");
   var cdn = document.getElementById("darkCDN");
   var icon = document.getElementById("btnSwitch");
+  var navBottom = document.querySelector("nav");
+  var burger = document.querySelector(".hamburger");
+  var footerTop = document.querySelector(".footerTop");
 
   if (document.body.classList.contains('dark')) {
+    burger.classList.remove("bg-white");
+    footerTop.classList.remove("border-top-light");
+    navBottom.classList.add('border-bottom-dark');
+    navBottom.classList.remove('border-bottom-light');
     document.body.classList.remove('dark');
     icon.innerHTML = "<i class=\"fa-solid fa-moon\"></i>";
     cdn.href = "";
@@ -8432,8 +8439,12 @@ var themeChange = function themeChange() {
     }
   } else {
     document.body.classList.add('dark');
+    burger.classList.add("bg-white");
+    footerTop.classList.add("border-top-light");
+    navBottom.classList.add('border-bottom-light');
+    navBottom.classList.remove('border-bottom-dark');
     cdn.href = "https://unpkg.com/github-activity-feed@latest/dist/github-activity.dark.min.css";
-    icon.innerHTML = "<i class=\"fa-solid fa-sun\"></i>";
+    icon.innerHTML = "<i class=\"fa-solid fa-sun text-warning\"></i>";
 
     for (var _i2 = 0; _i2 < light.length; _i2++) {
       light[_i2].classList.add('light');
@@ -8447,18 +8458,6 @@ var themeChange = function themeChange() {
 
 
 document.getElementById('btnSwitch').addEventListener('click', themeChange);
-var typed = new Typed('#typed', {
-  stringsElement: '#typed-strings',
-  typeSpeed: 40,
-  backSpeed: 20,
-  backDelay: 3000,
-  loop: true
-});
-GitHubActivity.feed({
-  username: "palmerlarson",
-  selector: "#feed",
-  limit: 20
-});
 },{"bootstrap":"../node_modules/bootstrap/dist/js/bootstrap.esm.js"}],"../../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
@@ -8487,7 +8486,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56665" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57200" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
