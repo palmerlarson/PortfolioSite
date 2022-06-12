@@ -1,0 +1,517 @@
+/*A code cleanup is due*/
+* {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-padding-top: 3rem;
+  }
+
+body {
+    font-family: 'PT Sans', sans-serif;
+}
+
+.mainNav {
+    list-style-type: none;
+    text-align: right;
+    padding-right: 16%;
+}
+
+.menu {
+    padding: 20px 20px 10px 20px;
+    background-color: rgb(194, 233, 235);
+    box-shadow: 0px 3px 15px rgba(0,0,0,0.2);
+    position: fixed;
+    width: 100%;
+    z-index: 2;
+}
+
+.bar {
+    display: inline-block;
+    padding-right: 10px;
+    font-size: 20px;
+    text-decoration: none;
+}
+
+.burgerButton {
+    display: none;
+}
+
+.navLink {
+    text-decoration: none;
+    color: black;
+}
+
+.navLink:hover {
+    border-bottom: 1px solid black;
+    font-weight: bold;
+}
+
+.navLink:visited {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.header-name {
+    padding-left: 16%;
+    float: left;
+    margin-top: -12px;
+}
+
+.about {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-top: 100px;
+    padding-left: 16%;
+    padding-right: 16%;
+    margin-bottom: 5%;
+    height: 100%;
+}
+
+
+.profilePic {
+    width: 250px;
+    border-radius: 100%;
+}
+
+.pictureInfo {
+    text-align: center;
+    flex: 1;
+    margin-right: 40px;
+}
+
+.network-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    max-width: 65%;
+    margin: 0 auto;
+}
+
+.icon {
+    flex: 1;
+    text-align: center;
+    font-size: 40px;
+    transition: all .2s ease-in-out;
+}
+
+.mediaLink {
+    color: rgb(105, 167, 170);
+    transition: all .1s ease-in-out;
+}
+
+.icon:hover {
+    transform: scale(1.3);
+}
+
+.bio-header {
+    font-size: 44px;
+}
+
+.bio-content {
+    margin-top: 10px;
+    font-size: 18px;
+    max-width: 100%;
+}
+
+.bio {
+    flex: 2;
+}
+
+.lists {
+    padding-top: 20px;
+    padding-left: 10%;
+}
+
+.interests-list {
+    float: left;
+}
+
+.education-list {
+    padding-left: 25px;
+    overflow: hidden;
+}
+
+/*SKILLS CONTENT*/
+.skills {
+    background-color: rgb(194, 233, 235);
+    padding-left: 16%;
+    padding-right: 16%;
+    padding-bottom: 100px;
+    box-shadow: 0px 3px 15px rgba(0,0,0,0.2);
+}
+
+.header {
+    text-align: center;
+    justify-content: center;
+    font-size: 44px;
+    padding-top: 15px;
+}
+
+.skills-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+
+.html-icon, .js-icon, .mysql-icon, .java-icon {
+    flex: 1;
+    text-align: center;
+    font-size: 50px;
+    padding-top: 40px;
+}
+
+.skills-content {
+    font-size: 18px;
+}
+
+/*FOOTER CONTENT*/
+footer {
+    padding-top: 60px;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+/*EXPERIENCE CONTENT*/
+.experience {
+    font-family: Helvetica, sans-serif;
+}
+
+/* The actual timeline (the vertical ruler) */
+.timeline {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* The actual timeline (the vertical ruler) */
+.timeline::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    background-color: rgb(194, 233, 235);
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    margin-left: -3px;
+    box-shadow: 0px 3px 15px rgba(0,0,0,0.2);
+}
+
+/* Container around content */
+.container {
+    padding: 10px 50px;
+    position: relative;
+    background-color: inherit;
+    width: 50%;
+}
+
+/* The circles on the timeline */
+.container::after {
+    content: '';
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    right: -17px;
+    background-color: #308696;
+    border: 4px solid #2DA1E7;
+    top: 15px;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Place the container to the left */
+.left {
+    left: 0;
+}
+
+/* Place the container to the right */
+.right {
+    left: 50%;
+}
+
+/* Add arrows to the left container (pointing right) */
+.left::before {
+    content: " ";
+    height: 0;
+    position: absolute;
+    top: 22px;
+    width: 0;
+    z-index: 1;
+    right: 30px;
+    border: medium solid white;
+    border-width: 10px 0 10px 10px;
+    border-color: transparent transparent transparent rgb(194, 233, 235);
+}
+
+/* Add arrows to the right container (pointing left) */
+.right::before {
+    content: " ";
+    height: 0;
+    position: absolute;
+    top: 22px;
+    width: 0;
+    z-index: 1;
+    left: 30px;
+    border: medium solid white;
+    border-width: 10px 10px 10px 0;
+    border-color: transparent rgb(194, 233, 235) transparent transparent;
+}
+
+/* Fix the circle for containers on the right side */
+.right::after {
+    left: -16px;
+}
+
+/* The actual content */
+.content {
+    padding: 20px 30px;
+    background-color: rgb(182, 228, 151);
+    position: relative;
+    border-radius: 6px;
+    box-shadow: 0px 3px 15px rgba(0,0,0,0.2);
+}
+
+/* PROJECT CONTENT */
+@keyframes bounce {
+    0%, 20%, 60%, 100% {
+      -webkit-transform: translateY(0);
+      transform: translateY(0);
+    }
+
+    40% {
+      -webkit-transform: translateY(-20px);
+      transform: translateY(-20px);
+    }
+
+    80% {
+      -webkit-transform: translateY(-10px);
+      transform: translateY(-10px);
+    }
+  }
+
+.projects {
+    background-color: rgb(194, 233, 235);
+    padding-left: 16%;
+    padding-right: 16%;
+    box-shadow: 0px 3px 15px rgba(0,0,0,0.2);
+}
+
+.project-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.project-item {
+    flex: 1;
+    text-align: center;
+    font-size: 2vw;
+    margin: 20px;
+    border: 3px solid green;
+    border-radius: 13px;
+    padding: 40px 0 40px 0;
+    box-shadow: 0px 3px 15px rgba(0,0,0,0.2);
+    color: white;
+}
+
+.project-link {
+    text-decoration: none;
+    color: black;
+}
+
+.project-link:hover {
+    animation: bounce 0.5s;
+}
+
+@keyframes switchImagePeopleCounter {
+    0% {
+        background:
+    }
+    100% {
+        background-image: url("/peopleCounter.8914aa25.png");
+    }
+}
+.project-item#peopleCounter:hover {
+
+    animation: switchImagePeopleCounter 5s;
+}
+
+.project-language {
+    font-size: 1vw;
+}
+
+/* .peopleCounter {
+    background-image: url("../images/peopleCounter.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.blackjack {
+    background-image: url("../images/blackjack.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.portfolio-site {
+    background-image: url("../images/portfolio.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.powerball-sim {
+    background-image: url("../images/powerball.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+} */
+
+/* TWITTER CONTENT */
+.twitter-header {
+    text-align: center;
+    justify-content: center;
+    padding-top: 15px;
+    font-size: 25px;
+}
+
+.twitter {
+    padding-left: 16%;
+    padding-right: 16%;
+}
+
+.twitter-container {
+    display: flex;
+    flex-direction: row;
+    padding-left: 16%;
+    padding-right: 16%;
+    padding-top: 20px;
+}
+
+.twitter-timeline {
+    flex: 1;
+}
+
+.twitter-description {
+    flex: 1;
+    word-spacing: 10%;
+    font-size: 20px;
+    margin-left: 30px;
+}
+
+.coding-challenge {
+    text-align: center;
+}
+
+
+
+@media screen and (max-width: 1065px) {
+
+    html {
+        scroll-padding-top: 5rem;
+      }
+
+    .header-name {
+        text-align: center;
+        float: left;
+    }
+
+    .menu {
+        padding: 20px 20px 0px 0px;
+        margin-left: 0;
+    }
+
+    .bar {
+        display: none;
+        text-align: center;
+    }
+
+    .pictureInfo {
+        margin-right: 0;
+    }
+
+    .bar:hover {
+        background-color: rgb(122, 151, 153);
+    }
+
+    .mainNav {
+        margin-top: 40px;
+        padding-right: 0;
+    }
+
+    .about {
+        flex-direction: column;
+    }
+
+    .interests-list {
+        float: none;
+    }
+
+    .education-list {
+        padding-left: 0;
+    }
+
+    .skills-container {
+        flex-direction: column;
+    }
+
+/* Place the timelime to the left */
+  .timeline::after {
+    left: 31px;
+  }
+
+/* Full-width containers */
+  .container {
+    width: 100%;
+    padding-left: 70px;
+    padding-right: 25px;
+  }
+
+/* Make sure that all arrows are pointing leftwards */
+  .container::before {
+    left: 60px;
+    border: medium solid white;
+    border-width: 10px 10px 10px 0;
+    border-color: transparent rgb(194, 233, 235) transparent transparent;
+  }
+
+/* Make sure all circles are at the same spot */
+  .left::after, .right::after {
+    left: 15px;
+  }
+
+/* Make all right containers behave like the left ones */
+  .right {
+    left: 0%;
+  }
+
+.twitter-container {
+    flex-direction: column-reverse;
+}
+
+.project-container {
+    flex-direction: column;
+}
+
+.project-item {
+    font-size: 100%;
+}
+
+.twitter-description {
+    margin-left: 0;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+.burgerButton {
+    display: block;
+    text-align: right;
+}
+
+}
+
+
+/*# sourceMappingURL=/stylesheet.2bdee08e.css.map */
