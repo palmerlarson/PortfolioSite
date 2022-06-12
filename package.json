@@ -2,11 +2,10 @@
   "name": "portfolio2",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "dev": "parcel ./index.html",
+    "dev": "parcel public/index.html",
     "prebuild": "npx rimraf build",
-    "build": "parcel build --public-url ./ ./index.html --dist-dir build"
+    "build": "parcel build --public-url ./ ./public/index.html --dist-dir build"
   },
   "keywords": [],
   "author": "",
@@ -16,12 +15,15 @@
     "@primer/css": "^20.1.1",
     "@primer/octicons": "^17.2.0",
     "aws-sdk": "^2.1144.0",
-    "bootstrap": "5.2.0-beta1",
+    "bootstrap": "^5.2.0-beta1",
+    "express": "^4.18.1",
     "github-activity-feed": "^0.3.0",
     "mustache": "^4.2.0",
     "typed.js": "^2.0.12"
   },
   "devDependencies": {
+    "@parcel/transformer-sass": "^2.6.0",
+    "parcel": "^2.6.0",
     "sass": "^1.51.0"
   }
 }

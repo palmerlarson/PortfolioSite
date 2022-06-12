@@ -1,6 +1,6 @@
-@import "../node_modules/bootstrap/scss/functions";
-@import "../node_modules/bootstrap/scss/variables";
-@import "../node_modules/bootstrap/scss/mixins";
+@import "/node_modules/bootstrap/scss/functions";
+@import "/node_modules/bootstrap/scss/variables";
+@import "/node_modules/bootstrap/scss/mixins";
 
 .img-crisp {
 	image-rendering: -moz-crisp-edges;
@@ -167,4 +167,4 @@ body {
 }
 
 
-@import "../node_modules/bootstrap/scss/bootstrap";
+@import "/node_modules/bootstrap/scss/bootstrap";

@@ -77,7 +77,3 @@ const darkMode = () => {
 
 // theme switch
 document.getElementById('btnSwitch').addEventListener('click', themeChange);
-
-
-
-import * as bootstrap from 'bootstrap';
