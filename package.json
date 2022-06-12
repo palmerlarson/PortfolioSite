@@ -18,7 +18,9 @@
     "bootstrap": "^5.2.0-beta1",
     "express": "^4.18.1",
     "github-activity-feed": "^0.3.0",
+    "jquery": "^3.6.0",
     "mustache": "^4.2.0",
+    "popper.js": "^1.16.1",
     "typed.js": "^2.0.12"
   },
   "devDependencies": {
