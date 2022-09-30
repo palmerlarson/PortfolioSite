@@ -130,6 +130,51 @@ body {
   }
 }
 
+div#feed div.gha-feed .gha-footer {
+  display: none;
+}
+
+div#feed div.gha-feed .gha-header {
+  width: 99.8%;
+  height: 87px;
+}
+
+div#feed div.gha-feed .gha-gravatar {
+  padding-right: 0;
+}
+
+@media only screen and (max-width: 910px) {
+  div#feed {
+    width: 90%;
+  }
+}
+
+@media only screen and (max-width: 320px) {
+  div#feed div.gha-gravatar {
+    display: none;
+  }
+}
+
+@media only screen and (max-width: 250px) {
+  div#feed div.gha-header {
+    display: none;
+  }
+
+  div#feed div.gha-push {
+    height: 0;
+  }
+}
+
+@media only screen and (max-width: 190px) {
+  body {
+    display: none;
+  }
+
+  html:before {
+    content: "lol get a bigger screen.";
+  }
+}
+
 :root {
   --bs-blue: #0d6efd;
   --bs-indigo: #6610f2;

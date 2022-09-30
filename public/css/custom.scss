@@ -163,8 +163,50 @@ body {
         height: 40em;
 		width: 100%;
     }
-
 }
+
+div#feed {
+	div.gha-feed {
+		.gha-footer {
+			display: none;
+		}
+		.gha-header {
+			width: 99.8%;
+			height: 87px;
+		}
+		.gha-gravatar {
+			padding-right: 0;
+		}
+		
+	}
+	@media only screen and (max-width: 910px) {
+		width: 90%;
+	  }
+	@media only screen and (max-width: 320px) {
+		div.gha-gravatar {
+			display: none;
+		}
+	  }
+	@media only screen and (max-width: 250px) {
+		div.gha-header {
+			display: none;
+		}
+		div.gha-push {
+			height: 0;
+		}
+	  }
+}
+
+@media only screen and (max-width: 190px) {
+	body {
+		display: none;
+	}
+	html::before {
+		content: "lol get a bigger screen.";
+	}
+  }
+
+
 
 
 @import "/node_modules/bootstrap/scss/bootstrap";

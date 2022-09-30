@@ -522,11 +522,9 @@ const themeChange = ()=>{
     if (document.body.classList.contains("dark")) {
         lightMode();
         document.cookie = "light";
-        console.log(document.cookie);
     } else {
         darkMode();
         document.cookie = "dark";
-        console.log(document.cookie);
     }
 };
 const lightMode = ()=>{
