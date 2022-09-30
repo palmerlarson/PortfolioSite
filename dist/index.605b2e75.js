@@ -505,17 +505,29 @@ function hmrAcceptRun(bundle, id) {
 },{}],"9Stbe":[function(require,module,exports) {
 var _bootstrap = require("bootstrap");
 const init = ()=>{
+    console.log(document.cookie);
     //initial check for dark desktop
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) themeChange();
-    //if user swithces to dark mode via personal desktop
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches && document.cookie != "light") darkMode();
+    else lightMode();
+    //if user switches to dark mode via personal desktop
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event)=>{
-        if (event.matches) themeChange();
+        if (event.matches && document.cookie != "light") darkMode();
+    });
+    window.matchMedia(document.cookie != "dark").addEventListener("change", (event)=>{
+        if (event.matches) lightMode();
     });
 };
 window.onload = init;
 const themeChange = ()=>{
-    if (document.body.classList.contains("dark")) lightMode();
-    else darkMode();
+    if (document.body.classList.contains("dark")) {
+        lightMode();
+        document.cookie = "light";
+        console.log(document.cookie);
+    } else {
+        darkMode();
+        document.cookie = "dark";
+        console.log(document.cookie);
+    }
 };
 const lightMode = ()=>{
     let light = document.querySelectorAll("a, span");
