@@ -206,6 +206,11 @@ div#feed {
 	}
   }
 
+  @media only screen and (max-width: 55px) {
+	html::before {
+		content: "nerd";
+	}
+  }
 
 
 

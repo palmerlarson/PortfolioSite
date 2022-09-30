@@ -175,6 +175,12 @@ div#feed div.gha-feed .gha-gravatar {
   }
 }
 
+@media only screen and (max-width: 55px) {
+  html:before {
+    content: "nerd";
+  }
+}
+
 :root {
   --bs-blue: #0d6efd;
   --bs-indigo: #6610f2;
