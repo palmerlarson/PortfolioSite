@@ -505,7 +505,6 @@ function hmrAcceptRun(bundle, id) {
 },{}],"9Stbe":[function(require,module,exports) {
 var _bootstrap = require("bootstrap");
 const init = ()=>{
-    console.log(document.cookie);
     //initial check for dark desktop
     if (window.matchMedia("(prefers-color-scheme: dark)").matches && document.cookie != "light") darkMode();
     else lightMode();
