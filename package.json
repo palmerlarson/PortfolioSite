@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "parcel public/index.html",
     "prebuild": "npx rimraf build",
-    "build": "parcel build --public-url ./ ./public/index.html --dist-dir build"
+    "build": "parcel build --public-url ./ ./public/*.html --dist-dir build",
+    "prod": "parcel build --public-url ./ ./public/*.html --dist-dir dist"
   },
   "keywords": [],
   "author": "",
