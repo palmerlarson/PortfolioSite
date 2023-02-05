@@ -142,15 +142,15 @@
       this[globalName] = mainExports;
     }
   }
-})({"i0JHw":[function(require,module,exports) {
-"use strict";
+})({"gNovn":[function(require,module,exports) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
 module.bundle.HMR_BUNDLE_ID = "603a16ad605b2e75";
-/* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, chrome, browser, importScripts */ /*::
+"use strict";
+/* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, chrome, browser, globalThis, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
   HMRAsset,
   HMRMessage,
@@ -180,6 +180,8 @@ interface ParcelModule {
 interface ExtensionContext {
   runtime: {|
     reload(): void,
+    getURL(url: string): string;
+    getManifest(): {manifest_version: number, ...};
   |};
 }
 declare var module: {bundle: ParcelRequire, ...};
@@ -189,6 +191,10 @@ declare var HMR_ENV_HASH: string;
 declare var HMR_SECURE: boolean;
 declare var chrome: ExtensionContext;
 declare var browser: ExtensionContext;
+declare var __parcel__import__: (string) => Promise<void>;
+declare var __parcel__importScripts__: (string) => Promise<void>;
+declare var globalThis: typeof self;
+declare var ServiceWorkerGlobalScope: Object;
 */ var OVERLAY_ID = "__parcel__error__overlay__";
 var OldModule = module.bundle.Module;
 function Module(moduleName) {
@@ -219,7 +225,8 @@ if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== "undefined") {
     var hostname = getHostname();
     var port = getPort();
     var protocol = HMR_SECURE || location.protocol == "https:" && !/localhost|127.0.0.1|0.0.0.0/.test(hostname) ? "wss" : "ws";
-    var ws = new WebSocket(protocol + "://" + hostname + (port ? ":" + port : "") + "/"); // Safari doesn't support sourceURL in error stacks.
+    var ws = new WebSocket(protocol + "://" + hostname + (port ? ":" + port : "") + "/"); // Web extension context
+    var extCtx = typeof chrome === "undefined" ? typeof browser === "undefined" ? null : browser : chrome; // Safari doesn't support sourceURL in error stacks.
     // eval may also be disabled via CSP, so do a quick check.
     var supportsSourceURL = false;
     try {
@@ -247,12 +254,7 @@ if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== "undefined") {
                     var id = assetsToAccept[i][1];
                     if (!acceptedAssets[id]) hmrAcceptRun(assetsToAccept[i][0], id);
                 }
-            } else if ("reload" in location) location.reload();
-            else {
-                // Web extension context
-                var ext = typeof chrome === "undefined" ? typeof browser === "undefined" ? null : browser : chrome;
-                if (ext && ext.runtime && ext.runtime.reload) ext.runtime.reload();
-            }
+            } else fullReload();
         }
         if (data.type === "error") {
             // Log parcel errors to console
@@ -279,7 +281,7 @@ function removeErrorOverlay() {
     var overlay = document.getElementById(OVERLAY_ID);
     if (overlay) {
         overlay.remove();
-        console.log("[parcel] \u2728 Error resolved");
+        console.log("[parcel] ✨ Error resolved");
     }
 }
 function createErrorOverlay(diagnostics) {
@@ -308,6 +310,10 @@ ${frame.code}`;
     errorHTML += "</div>";
     overlay.innerHTML = errorHTML;
     return overlay;
+}
+function fullReload() {
+    if ("reload" in location) location.reload();
+    else if (extCtx && extCtx.runtime && extCtx.runtime.reload) extCtx.runtime.reload();
 }
 function getParents(bundle, id) /*: Array<[ParcelRequire, string]> */ {
     var modules = bundle.modules;
@@ -349,6 +355,32 @@ function reloadCSS() {
         cssTimeout = null;
     }, 50);
 }
+function hmrDownload(asset) {
+    if (asset.type === "js") {
+        if (typeof document !== "undefined") {
+            let script = document.createElement("script");
+            script.src = asset.url + "?t=" + Date.now();
+            if (asset.outputFormat === "esmodule") script.type = "module";
+            return new Promise((resolve, reject)=>{
+                var _document$head;
+                script.onload = ()=>resolve(script);
+                script.onerror = reject;
+                (_document$head = document.head) === null || _document$head === void 0 || _document$head.appendChild(script);
+            });
+        } else if (typeof importScripts === "function") {
+            // Worker scripts
+            if (asset.outputFormat === "esmodule") return import(asset.url + "?t=" + Date.now());
+            else return new Promise((resolve, reject)=>{
+                try {
+                    importScripts(asset.url + "?t=" + Date.now());
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+    }
+}
 async function hmrApplyUpdates(assets) {
     global.parcelHotUpdate = Object.create(null);
     let scriptsToRemove;
@@ -361,24 +393,20 @@ async function hmrApplyUpdates(assets) {
         // This path is also taken if a CSP disallows eval.
         if (!supportsSourceURL) {
             let promises = assets.map((asset)=>{
-                if (asset.type === "js") {
-                    if (typeof document !== "undefined") {
-                        let script = document.createElement("script");
-                        script.src = asset.url;
-                        return new Promise((resolve, reject)=>{
-                            var _document$head;
-                            script.onload = ()=>resolve(script);
-                            script.onerror = reject;
-                            (_document$head = document.head) === null || _document$head === void 0 || _document$head.appendChild(script);
-                        });
-                    } else if (typeof importScripts === "function") return new Promise((resolve, reject)=>{
-                        try {
-                            importScripts(asset.url);
-                        } catch (err) {
-                            reject(err);
+                var _hmrDownload;
+                return (_hmrDownload = hmrDownload(asset)) === null || _hmrDownload === void 0 ? void 0 : _hmrDownload.catch((err)=>{
+                    // Web extension bugfix for Chromium
+                    // https://bugs.chromium.org/p/chromium/issues/detail?id=1255412#c12
+                    if (extCtx && extCtx.runtime && extCtx.runtime.getManifest().manifest_version == 3) {
+                        if (typeof ServiceWorkerGlobalScope != "undefined" && global instanceof ServiceWorkerGlobalScope) {
+                            extCtx.runtime.reload();
+                            return;
                         }
-                    });
-                }
+                        asset.url = extCtx.runtime.getURL("/__parcel_hmr_proxy__?url=" + encodeURIComponent(asset.url + "?t=" + Date.now()));
+                        return hmrDownload(asset);
+                    }
+                    throw err;
+                });
             });
             scriptsToRemove = await Promise.all(promises);
         }
@@ -415,6 +443,7 @@ function hmrApply(bundle, asset) {
             if (supportsSourceURL) // Global eval. We would use `new Function` here but browser
             // support for source maps is better with eval.
             (0, eval)(asset.output);
+             // $FlowFixMe
             let fn = global.parcelHotUpdate[asset.id];
             modules[asset.id] = [
                 fn,
@@ -423,23 +452,23 @@ function hmrApply(bundle, asset) {
         } else if (bundle.parent) hmrApply(bundle.parent, asset);
     }
 }
-function hmrDelete(bundle, id1) {
+function hmrDelete(bundle, id) {
     let modules = bundle.modules;
     if (!modules) return;
-    if (modules[id1]) {
+    if (modules[id]) {
         // Collect dependencies that will become orphaned when this module is deleted.
-        let deps = modules[id1][1];
+        let deps = modules[id][1];
         let orphans = [];
         for(let dep in deps){
             let parents = getParents(module.bundle.root, deps[dep]);
             if (parents.length === 1) orphans.push(deps[dep]);
         } // Delete the module. This must be done before deleting dependencies in case of circular dependencies.
-        delete modules[id1];
-        delete bundle.cache[id1]; // Now delete the orphans.
+        delete modules[id];
+        delete bundle.cache[id]; // Now delete the orphans.
         orphans.forEach((id)=>{
             hmrDelete(module.bundle.root, id);
         });
-    } else if (bundle.parent) hmrDelete(bundle.parent, id1);
+    } else if (bundle.parent) hmrDelete(bundle.parent, id);
 }
 function hmrAcceptCheck(bundle, id, depsByBundle) {
     if (hmrAcceptCheckOne(bundle, id, depsByBundle)) return true;
@@ -562,13 +591,17 @@ const darkMode = ()=>{
     cdn.href = `https://unpkg.com/github-activity-feed@latest/dist/github-activity.dark.min.css`;
     icon.innerHTML = `<i class="fa-solid fa-sun text-warning"></i>`;
     for(let i = 0; i < light.length; i++)light[i].classList.add("light");
-    for(let i2 = 0; i2 < dark.length; i2++)dark[i2].classList.add("darkDiv");
+    for(let i1 = 0; i1 < dark.length; i1++)dark[i1].classList.add("darkDiv");
 };
 // theme switch
 document.getElementById("btnSwitch").addEventListener("click", themeChange);
 
 },{"bootstrap":"h36JB"}],"h36JB":[function(require,module,exports) {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+/*!
+  * Bootstrap v5.2.3 (https://getbootstrap.com/)
+  * Copyright 2011-2022 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
+  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
+  */ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "Alert", ()=>Alert);
 parcelHelpers.export(exports, "Button", ()=>Button);
@@ -582,19 +615,15 @@ parcelHelpers.export(exports, "ScrollSpy", ()=>ScrollSpy);
 parcelHelpers.export(exports, "Tab", ()=>Tab);
 parcelHelpers.export(exports, "Toast", ()=>Toast);
 parcelHelpers.export(exports, "Tooltip", ()=>Tooltip);
-/*!
-  * Bootstrap v5.2.0-beta1 (https://getbootstrap.com/)
-  * Copyright 2011-2022 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
-  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
-  */ var _core = require("@popperjs/core");
+var _core = require("@popperjs/core");
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/index.js
+ * Bootstrap (v5.2.3): util/index.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ const MAX_UID = 1000000;
 const MILLISECONDS_MULTIPLIER = 1000;
-const TRANSITION_END = "transitionend"; // Shoutout AngusCroll (https://goo.gl/pxwQGp)
+const TRANSITION_END = "transitionend"; // Shout-out Angus Croll (https://goo.gl/pxwQGp)
 const toType = (object)=>{
     if (object === null || object === undefined) return `${object}`;
     return Object.prototype.toString.call(object).match(/\s([a-z]+)/i)[1].toLowerCase();
@@ -701,14 +730,14 @@ const getjQuery = ()=>{
     return null;
 };
 const DOMContentLoadedCallbacks = [];
-const onDOMContentLoaded = (callback1)=>{
+const onDOMContentLoaded = (callback)=>{
     if (document.readyState === "loading") {
         // add listener on the first call when the document is in loading state
         if (!DOMContentLoadedCallbacks.length) document.addEventListener("DOMContentLoaded", ()=>{
             for (const callback of DOMContentLoadedCallbacks)callback();
         });
-        DOMContentLoadedCallbacks.push(callback1);
-    } else callback1();
+        DOMContentLoadedCallbacks.push(callback);
+    } else callback();
 };
 const isRTL = ()=>document.documentElement.dir === "rtl";
 const defineJQueryPlugin = (plugin)=>{
@@ -767,7 +796,7 @@ const executeAfterTransition = (callback, transitionElement, waitForTransition =
 };
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): dom/event-handler.js
+ * Bootstrap (v5.2.3): dom/event-handler.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -831,18 +860,20 @@ const nativeEvents = new Set([
 ]);
 /**
  * Private methods
- */ function getUidEvent(element, uid) {
+ */ function makeEventUid(element, uid) {
     return uid && `${uid}::${uidEvent++}` || element.uidEvent || uidEvent++;
 }
-function getEvent(element) {
-    const uid = getUidEvent(element);
+function getElementEvents(element) {
+    const uid = makeEventUid(element);
     element.uidEvent = uid;
     eventRegistry[uid] = eventRegistry[uid] || {};
     return eventRegistry[uid];
 }
 function bootstrapHandler(element, fn) {
     return function handler(event) {
-        event.delegateTarget = element;
+        hydrateObj(event, {
+            delegateTarget: element
+        });
         if (handler.oneOff) EventHandler.off(element, event.type, fn);
         return fn.apply(element, [
             event
@@ -854,7 +885,9 @@ function bootstrapDelegationHandler(element, selector, fn) {
         const domElements = element.querySelectorAll(selector);
         for(let { target  } = event; target && target !== this; target = target.parentNode)for (const domElement of domElements){
             if (domElement !== target) continue;
-            event.delegateTarget = target;
+            hydrateObj(event, {
+                delegateTarget: target
+            });
             if (handler.oneOff) EventHandler.off(element, event.type, selector, fn);
             return fn.apply(target, [
                 event
@@ -862,26 +895,23 @@ function bootstrapDelegationHandler(element, selector, fn) {
         }
     };
 }
-function findHandler(events, handler, delegationSelector = null) {
-    return Object.values(events).find((event)=>event.originalHandler === handler && event.delegationSelector === delegationSelector);
+function findHandler(events, callable, delegationSelector = null) {
+    return Object.values(events).find((event)=>event.callable === callable && event.delegationSelector === delegationSelector);
 }
 function normalizeParameters(originalTypeEvent, handler, delegationFunction) {
-    const delegation = typeof handler === "string";
-    const originalHandler = delegation ? delegationFunction : handler;
+    const isDelegated = typeof handler === "string"; // todo: tooltip passes `false` instead of selector, so we need to check
+    const callable = isDelegated ? delegationFunction : handler || delegationFunction;
     let typeEvent = getTypeEvent(originalTypeEvent);
     if (!nativeEvents.has(typeEvent)) typeEvent = originalTypeEvent;
     return [
-        delegation,
-        originalHandler,
+        isDelegated,
+        callable,
         typeEvent
     ];
 }
 function addHandler(element, originalTypeEvent, handler, delegationFunction, oneOff) {
     if (typeof originalTypeEvent !== "string" || !element) return;
-    if (!handler) {
-        handler = delegationFunction;
-        delegationFunction = null;
-    } // in case of mouseenter or mouseleave wrap the handler within a function that checks for its DOM position
+    let [isDelegated, callable, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction); // in case of mouseenter or mouseleave wrap the handler within a function that checks for its DOM position
     // this prevents the handler from being dispatched the same way as mouseover or mouseout does
     if (originalTypeEvent in customEvents) {
         const wrapFunction = (fn)=>{
@@ -889,25 +919,23 @@ function addHandler(element, originalTypeEvent, handler, delegationFunction, one
                 if (!event.relatedTarget || event.relatedTarget !== event.delegateTarget && !event.delegateTarget.contains(event.relatedTarget)) return fn.call(this, event);
             };
         };
-        if (delegationFunction) delegationFunction = wrapFunction(delegationFunction);
-        else handler = wrapFunction(handler);
+        callable = wrapFunction(callable);
     }
-    const [delegation, originalHandler, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction);
-    const events = getEvent(element);
+    const events = getElementEvents(element);
     const handlers = events[typeEvent] || (events[typeEvent] = {});
-    const previousFunction = findHandler(handlers, originalHandler, delegation ? handler : null);
+    const previousFunction = findHandler(handlers, callable, isDelegated ? handler : null);
     if (previousFunction) {
         previousFunction.oneOff = previousFunction.oneOff && oneOff;
         return;
     }
-    const uid = getUidEvent(originalHandler, originalTypeEvent.replace(namespaceRegex, ""));
-    const fn1 = delegation ? bootstrapDelegationHandler(element, handler, delegationFunction) : bootstrapHandler(element, handler);
-    fn1.delegationSelector = delegation ? handler : null;
-    fn1.originalHandler = originalHandler;
-    fn1.oneOff = oneOff;
-    fn1.uidEvent = uid;
-    handlers[uid] = fn1;
-    element.addEventListener(typeEvent, fn1, delegation);
+    const uid = makeEventUid(callable, originalTypeEvent.replace(namespaceRegex, ""));
+    const fn = isDelegated ? bootstrapDelegationHandler(element, handler, callable) : bootstrapHandler(element, callable);
+    fn.delegationSelector = isDelegated ? handler : null;
+    fn.callable = callable;
+    fn.oneOff = oneOff;
+    fn.uidEvent = uid;
+    handlers[uid] = fn;
+    element.addEventListener(typeEvent, fn, isDelegated);
 }
 function removeHandler(element, events, typeEvent, handler, delegationSelector) {
     const fn = findHandler(events[typeEvent], handler, delegationSelector);
@@ -919,7 +947,7 @@ function removeNamespacedHandlers(element, events, typeEvent, namespace) {
     const storeElementEvent = events[typeEvent] || {};
     for (const handlerKey of Object.keys(storeElementEvent))if (handlerKey.includes(namespace)) {
         const event = storeElementEvent[handlerKey];
-        removeHandler(element, events, typeEvent, event.originalHandler, event.delegationSelector);
+        removeHandler(element, events, typeEvent, event.callable, event.delegationSelector);
     }
 }
 function getTypeEvent(event) {
@@ -936,23 +964,23 @@ const EventHandler = {
     },
     off (element, originalTypeEvent, handler, delegationFunction) {
         if (typeof originalTypeEvent !== "string" || !element) return;
-        const [delegation, originalHandler, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction);
+        const [isDelegated, callable, typeEvent] = normalizeParameters(originalTypeEvent, handler, delegationFunction);
         const inNamespace = typeEvent !== originalTypeEvent;
-        const events = getEvent(element);
+        const events = getElementEvents(element);
+        const storeElementEvent = events[typeEvent] || {};
         const isNamespace = originalTypeEvent.startsWith(".");
-        if (typeof originalHandler !== "undefined") {
+        if (typeof callable !== "undefined") {
             // Simplest case: handler is passed, remove that listener ONLY.
-            if (!events || !events[typeEvent]) return;
-            removeHandler(element, events, typeEvent, originalHandler, delegation ? handler : null);
+            if (!Object.keys(storeElementEvent).length) return;
+            removeHandler(element, events, typeEvent, callable, isDelegated ? handler : null);
             return;
         }
         if (isNamespace) for (const elementEvent of Object.keys(events))removeNamespacedHandlers(element, events, elementEvent, originalTypeEvent.slice(1));
-        const storeElementEvent = events[typeEvent] || {};
         for (const keyHandlers of Object.keys(storeElementEvent)){
             const handlerKey = keyHandlers.replace(stripUidRegex, "");
             if (!inNamespace || originalTypeEvent.includes(handlerKey)) {
                 const event = storeElementEvent[keyHandlers];
-                removeHandler(element, events, typeEvent, event.originalHandler, event.delegationSelector);
+                removeHandler(element, events, typeEvent, event.callable, event.delegationSelector);
             }
         }
     },
@@ -972,24 +1000,33 @@ const EventHandler = {
             nativeDispatch = !jQueryEvent.isImmediatePropagationStopped();
             defaultPrevented = jQueryEvent.isDefaultPrevented();
         }
-        const evt = new Event(event, {
+        let evt = new Event(event, {
             bubbles,
             cancelable: true
-        }); // merge custom information in our event
-        if (typeof args !== "undefined") for (const key of Object.keys(args))Object.defineProperty(evt, key, {
-            get () {
-                return args[key];
-            }
         });
+        evt = hydrateObj(evt, args);
         if (defaultPrevented) evt.preventDefault();
         if (nativeDispatch) element.dispatchEvent(evt);
         if (evt.defaultPrevented && jQueryEvent) jQueryEvent.preventDefault();
         return evt;
     }
 };
+function hydrateObj(obj, meta) {
+    for (const [key, value] of Object.entries(meta || {}))try {
+        obj[key] = value;
+    } catch (_unused) {
+        Object.defineProperty(obj, key, {
+            configurable: true,
+            get () {
+                return value;
+            }
+        });
+    }
+    return obj;
+}
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): dom/data.js
+ * Bootstrap (v5.2.3): dom/data.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1020,7 +1057,7 @@ const Data = {
 };
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): dom/manipulator.js
+ * Bootstrap (v5.2.3): dom/manipulator.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ function normalizeData(value) {
@@ -1049,10 +1086,10 @@ const Manipulator = {
         if (!element) return {};
         const attributes = {};
         const bsKeys = Object.keys(element.dataset).filter((key)=>key.startsWith("bs") && !key.startsWith("bsConfig"));
-        for (const key1 of bsKeys){
-            let pureKey = key1.replace(/^bs/, "");
+        for (const key of bsKeys){
+            let pureKey = key.replace(/^bs/, "");
             pureKey = pureKey.charAt(0).toLowerCase() + pureKey.slice(1, pureKey.length);
-            attributes[pureKey] = normalizeData(element.dataset[key1]);
+            attributes[pureKey] = normalizeData(element.dataset[key]);
         }
         return attributes;
     },
@@ -1062,7 +1099,7 @@ const Manipulator = {
 };
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/config.js
+ * Bootstrap (v5.2.3): util/config.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1107,12 +1144,12 @@ const Manipulator = {
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): base-component.js
+ * Bootstrap (v5.2.3): base-component.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
  * Constants
- */ const VERSION = "5.2.0-beta1";
+ */ const VERSION = "5.2.3";
 /**
  * Class definition
  */ class BaseComponent extends Config {
@@ -1159,7 +1196,7 @@ const Manipulator = {
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/component-functions.js
+ * Bootstrap (v5.2.3): util/component-functions.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ const enableDismissTrigger = (component, method = "hide")=>{
@@ -1178,7 +1215,7 @@ const Manipulator = {
 };
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): alert.js
+ * Bootstrap (v5.2.3): alert.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1226,7 +1263,7 @@ const CLASS_NAME_SHOW$8 = "show";
  */ defineJQueryPlugin(Alert);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): button.js
+ * Bootstrap (v5.2.3): button.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1269,7 +1306,7 @@ const EVENT_CLICK_DATA_API$6 = `click${EVENT_KEY$a}${DATA_API_KEY$6}`;
  */ defineJQueryPlugin(Button);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): dom/selector-engine.js
+ * Bootstrap (v5.2.3): dom/selector-engine.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1330,7 +1367,7 @@ const EVENT_CLICK_DATA_API$6 = `click${EVENT_KEY$a}${DATA_API_KEY$6}`;
 };
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/swipe.js
+ * Bootstrap (v5.2.3): util/swipe.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1347,14 +1384,14 @@ const POINTER_TYPE_PEN = "pen";
 const CLASS_NAME_POINTER_EVENT = "pointer-event";
 const SWIPE_THRESHOLD = 40;
 const Default$c = {
+    endCallback: null,
     leftCallback: null,
-    rightCallback: null,
-    endCallback: null
+    rightCallback: null
 };
 const DefaultType$c = {
+    endCallback: "(function|null)",
     leftCallback: "(function|null)",
-    rightCallback: "(function|null)",
-    endCallback: "(function|null)"
+    rightCallback: "(function|null)"
 };
 /**
  * Class definition
@@ -1423,7 +1460,7 @@ const DefaultType$c = {
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): carousel.js
+ * Bootstrap (v5.2.3): carousel.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1475,9 +1512,10 @@ const Default$b = {
 };
 const DefaultType$b = {
     interval: "(number|boolean)",
+    // TODO:v6 remove boolean support
     keyboard: "boolean",
-    ride: "(boolean|string)",
     pause: "(string|boolean)",
+    ride: "(boolean|string)",
     touch: "boolean",
     wrap: "boolean"
 };
@@ -1719,7 +1757,7 @@ EventHandler.on(window, EVENT_LOAD_DATA_API$3, ()=>{
  */ defineJQueryPlugin(Carousel);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): collapse.js
+ * Bootstrap (v5.2.3): collapse.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1744,12 +1782,12 @@ const HEIGHT = "height";
 const SELECTOR_ACTIVES = ".collapse.show, .collapse.collapsing";
 const SELECTOR_DATA_TOGGLE$4 = '[data-bs-toggle="collapse"]';
 const Default$a = {
-    toggle: true,
-    parent: null
+    parent: null,
+    toggle: true
 };
 const DefaultType$a = {
-    toggle: "boolean",
-    parent: "(null|element)"
+    parent: "(null|element)",
+    toggle: "boolean"
 };
 /**
  * Class definition
@@ -1894,7 +1932,7 @@ const DefaultType$a = {
  */ defineJQueryPlugin(Collapse);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): dropdown.js
+ * Bootstrap (v5.2.3): dropdown.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -1936,23 +1974,23 @@ const PLACEMENT_LEFT = isRTL() ? "right-start" : "left-start";
 const PLACEMENT_TOPCENTER = "top";
 const PLACEMENT_BOTTOMCENTER = "bottom";
 const Default$9 = {
+    autoClose: true,
+    boundary: "clippingParents",
+    display: "dynamic",
     offset: [
         0,
         2
     ],
-    boundary: "clippingParents",
-    reference: "toggle",
-    display: "dynamic",
     popperConfig: null,
-    autoClose: true
+    reference: "toggle"
 };
 const DefaultType$9 = {
-    offset: "(array|string|function)",
+    autoClose: "(boolean|string)",
     boundary: "(string|element)",
-    reference: "(string|element|object)",
     display: "string",
+    offset: "(array|string|function)",
     popperConfig: "(null|object|function)",
-    autoClose: "(boolean|string)"
+    reference: "(string|element|object)"
 };
 /**
  * Class definition
@@ -1961,7 +1999,8 @@ const DefaultType$9 = {
         super(element, config);
         this._popper = null;
         this._parent = this._element.parentNode; // dropdown wrapper
-        this._menu = SelectorEngine.findOne(SELECTOR_MENU, this._parent);
+        // todo: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.2/forms/input-group/
+        this._menu = SelectorEngine.next(this._element, SELECTOR_MENU)[0] || SelectorEngine.prev(this._element, SELECTOR_MENU)[0] || SelectorEngine.findOne(SELECTOR_MENU, this._parent);
         this._inNavbar = this._detectNavbar();
     }
     static get Default() {
@@ -2136,8 +2175,8 @@ const DefaultType$9 = {
         ].includes(event.key);
         if (!isUpOrDownEvent && !isEscapeEvent) return;
         if (isInput && !isEscapeEvent) return;
-        event.preventDefault();
-        const getToggleButton = SelectorEngine.findOne(SELECTOR_DATA_TOGGLE$3, event.delegateTarget.parentNode);
+        event.preventDefault(); // todo: v6 revert #37011 & change markup https://getbootstrap.com/docs/5.2/forms/input-group/
+        const getToggleButton = this.matches(SELECTOR_DATA_TOGGLE$3) ? this : SelectorEngine.prev(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.next(this, SELECTOR_DATA_TOGGLE$3)[0] || SelectorEngine.findOne(SELECTOR_DATA_TOGGLE$3, event.delegateTarget.parentNode);
         const instance = Dropdown.getOrCreateInstance(getToggleButton);
         if (isUpOrDownEvent) {
             event.stopPropagation();
@@ -2168,7 +2207,7 @@ EventHandler.on(document, EVENT_CLICK_DATA_API$3, SELECTOR_DATA_TOGGLE$3, functi
  */ defineJQueryPlugin(Dropdown);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/scrollBar.js
+ * Bootstrap (v5.2.3): util/scrollBar.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -2244,7 +2283,7 @@ const PROPERTY_MARGIN = "margin-right";
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/backdrop.js
+ * Bootstrap (v5.2.3): util/backdrop.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -2255,19 +2294,18 @@ const CLASS_NAME_SHOW$5 = "show";
 const EVENT_MOUSEDOWN = `mousedown.bs.${NAME$9}`;
 const Default$8 = {
     className: "modal-backdrop",
+    clickCallback: null,
+    isAnimated: false,
     isVisible: true,
     // if false, we use the backdrop helper without adding any element to the dom
-    isAnimated: false,
-    rootElement: "body",
-    // give the choice to place backdrop under different elements
-    clickCallback: null
+    rootElement: "body" // give the choice to place backdrop under different elements
 };
 const DefaultType$8 = {
     className: "string",
-    isVisible: "boolean",
+    clickCallback: "(function|null)",
     isAnimated: "boolean",
-    rootElement: "(element|string)",
-    clickCallback: "(function|null)"
+    isVisible: "boolean",
+    rootElement: "(element|string)"
 };
 /**
  * Class definition
@@ -2346,7 +2384,7 @@ const DefaultType$8 = {
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/focustrap.js
+ * Bootstrap (v5.2.3): util/focustrap.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -2360,13 +2398,12 @@ const TAB_KEY = "Tab";
 const TAB_NAV_FORWARD = "forward";
 const TAB_NAV_BACKWARD = "backward";
 const Default$7 = {
-    trapElement: null,
-    // The element to trap focus inside of
-    autofocus: true
+    autofocus: true,
+    trapElement: null // The element to trap focus inside of
 };
 const DefaultType$7 = {
-    trapElement: "element",
-    autofocus: "boolean"
+    autofocus: "boolean",
+    trapElement: "element"
 };
 /**
  * Class definition
@@ -2414,7 +2451,7 @@ const DefaultType$7 = {
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): modal.js
+ * Bootstrap (v5.2.3): modal.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -2431,6 +2468,7 @@ const EVENT_SHOW$4 = `show${EVENT_KEY$4}`;
 const EVENT_SHOWN$4 = `shown${EVENT_KEY$4}`;
 const EVENT_RESIZE$1 = `resize${EVENT_KEY$4}`;
 const EVENT_CLICK_DISMISS = `click.dismiss${EVENT_KEY$4}`;
+const EVENT_MOUSEDOWN_DISMISS = `mousedown.dismiss${EVENT_KEY$4}`;
 const EVENT_KEYDOWN_DISMISS$1 = `keydown.dismiss${EVENT_KEY$4}`;
 const EVENT_CLICK_DATA_API$2 = `click${EVENT_KEY$4}${DATA_API_KEY$2}`;
 const CLASS_NAME_OPEN = "modal-open";
@@ -2443,13 +2481,13 @@ const SELECTOR_MODAL_BODY = ".modal-body";
 const SELECTOR_DATA_TOGGLE$2 = '[data-bs-toggle="modal"]';
 const Default$6 = {
     backdrop: true,
-    keyboard: true,
-    focus: true
+    focus: true,
+    keyboard: true
 };
 const DefaultType$6 = {
     backdrop: "(boolean|string)",
-    keyboard: "boolean",
-    focus: "boolean"
+    focus: "boolean",
+    keyboard: "boolean"
 };
 /**
  * Class definition
@@ -2557,14 +2595,16 @@ const DefaultType$6 = {
         EventHandler.on(window, EVENT_RESIZE$1, ()=>{
             if (this._isShown && !this._isTransitioning) this._adjustDialog();
         });
-        EventHandler.on(this._element, EVENT_CLICK_DISMISS, (event)=>{
-            if (event.target !== event.currentTarget) // click is inside modal-dialog
-            return;
-            if (this._config.backdrop === "static") {
-                this._triggerBackdropTransition();
-                return;
-            }
-            if (this._config.backdrop) this.hide();
+        EventHandler.on(this._element, EVENT_MOUSEDOWN_DISMISS, (event)=>{
+            // a bad trick to segregate clicks that may start inside dialog but end outside, and avoid listen to scrollbar clicks
+            EventHandler.one(this._element, EVENT_CLICK_DISMISS, (event2)=>{
+                if (this._element !== event.target || this._element !== event2.target) return;
+                if (this._config.backdrop === "static") {
+                    this._triggerBackdropTransition();
+                    return;
+                }
+                if (this._config.backdrop) this.hide();
+            });
         });
     }
     _hideModal() {
@@ -2610,8 +2650,8 @@ const DefaultType$6 = {
             this._element.style[property] = `${scrollbarWidth}px`;
         }
         if (!isBodyOverflowing && isModalOverflowing) {
-            const property = isRTL() ? "paddingRight" : "paddingLeft";
-            this._element.style[property] = `${scrollbarWidth}px`;
+            const property1 = isRTL() ? "paddingRight" : "paddingLeft";
+            this._element.style[property1] = `${scrollbarWidth}px`;
         }
     }
     _resetAdjustments() {
@@ -2653,7 +2693,7 @@ enableDismissTrigger(Modal);
  */ defineJQueryPlugin(Modal);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): offcanvas.js
+ * Bootstrap (v5.2.3): offcanvas.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -2723,7 +2763,7 @@ const DefaultType$5 = {
         this._element.setAttribute("role", "dialog");
         this._element.classList.add(CLASS_NAME_SHOWING$1);
         const completeCallBack = ()=>{
-            if (!this._config.scroll) this._focustrap.activate();
+            if (!this._config.scroll || this._config.backdrop) this._focustrap.activate();
             this._element.classList.add(CLASS_NAME_SHOW$3);
             this._element.classList.remove(CLASS_NAME_SHOWING$1);
             EventHandler.trigger(this._element, EVENT_SHOWN$3, {
@@ -2763,13 +2803,13 @@ const DefaultType$5 = {
             }
             this.hide();
         }; // 'static' option will be translated to true, and booleans will keep their value
-        const isVisible1 = Boolean(this._config.backdrop);
+        const isVisible = Boolean(this._config.backdrop);
         return new Backdrop({
             className: CLASS_NAME_BACKDROP,
-            isVisible: isVisible1,
+            isVisible,
             isAnimated: true,
             rootElement: this._element.parentNode,
-            clickCallback: isVisible1 ? clickCallback : null
+            clickCallback: isVisible ? clickCallback : null
         });
     }
     _initializeFocusTrap() {
@@ -2826,7 +2866,7 @@ enableDismissTrigger(Offcanvas);
  */ defineJQueryPlugin(Offcanvas);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/sanitizer.js
+ * Bootstrap (v5.2.3): util/sanitizer.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ const uriAttributes = new Set([
@@ -2843,12 +2883,12 @@ const ARIA_ATTRIBUTE_PATTERN = /^aria-[\w-]*$/i;
 /**
  * A pattern that recognizes a commonly useful subset of URLs that are safe.
  *
- * Shoutout to Angular https://github.com/angular/angular/blob/12.2.x/packages/core/src/sanitization/url_sanitizer.ts
+ * Shout-out to Angular https://github.com/angular/angular/blob/12.2.x/packages/core/src/sanitization/url_sanitizer.ts
  */ const SAFE_URL_PATTERN = /^(?:(?:https?|mailto|ftp|tel|file|sms):|[^#&/:?]*(?:[#/?]|$))/i;
 /**
  * A pattern that matches safe data URLs. Only matches image, video and audio types.
  *
- * Shoutout to Angular https://github.com/angular/angular/blob/12.2.x/packages/core/src/sanitization/url_sanitizer.ts
+ * Shout-out to Angular https://github.com/angular/angular/blob/12.2.x/packages/core/src/sanitization/url_sanitizer.ts
  */ const DATA_URL_PATTERN = /^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[\d+/a-z]+=*$/i;
 const allowedAttribute = (attribute, allowedAttributeList)=>{
     const attributeName = attribute.nodeName.toLowerCase();
@@ -2930,34 +2970,34 @@ function sanitizeHtml(unsafeHtml, allowList, sanitizeFunction) {
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): util/template-factory.js
+ * Bootstrap (v5.2.3): util/template-factory.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
  * Constants
  */ const NAME$5 = "TemplateFactory";
 const Default$4 = {
-    extraClass: "",
-    template: "<div></div>",
+    allowList: DefaultAllowlist,
     content: {},
     // { selector : text ,  selector2 : text2 , }
+    extraClass: "",
     html: false,
     sanitize: true,
     sanitizeFn: null,
-    allowList: DefaultAllowlist
+    template: "<div></div>"
 };
 const DefaultType$4 = {
-    extraClass: "(string|function)",
-    template: "string",
+    allowList: "object",
     content: "object",
+    extraClass: "(string|function)",
     html: "boolean",
     sanitize: "boolean",
     sanitizeFn: "(null|function)",
-    allowList: "object"
+    template: "string"
 };
 const DefaultContentType = {
-    selector: "(string|element)",
-    entry: "(string|element|function|null)"
+    entry: "(string|element|function|null)",
+    selector: "(string|element)"
 };
 /**
  * Class definition
@@ -3043,7 +3083,7 @@ const DefaultContentType = {
 }
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): tooltip.js
+ * Bootstrap (v5.2.3): tooltip.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -3082,50 +3122,50 @@ const AttachmentMap = {
     LEFT: isRTL() ? "right" : "left"
 };
 const Default$3 = {
+    allowList: DefaultAllowlist,
     animation: true,
-    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
-    trigger: "hover focus",
-    title: "",
-    delay: 0,
-    html: false,
-    selector: false,
-    placement: "top",
-    offset: [
-        0,
-        0
-    ],
+    boundary: "clippingParents",
     container: false,
+    customClass: "",
+    delay: 0,
     fallbackPlacements: [
         "top",
         "right",
         "bottom",
         "left"
     ],
-    boundary: "clippingParents",
-    customClass: "",
+    html: false,
+    offset: [
+        0,
+        0
+    ],
+    placement: "top",
+    popperConfig: null,
     sanitize: true,
     sanitizeFn: null,
-    allowList: DefaultAllowlist,
-    popperConfig: null
+    selector: false,
+    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
+    title: "",
+    trigger: "hover focus"
 };
 const DefaultType$3 = {
+    allowList: "object",
     animation: "boolean",
-    template: "string",
-    title: "(string|element|function)",
-    trigger: "string",
-    delay: "(number|object)",
-    html: "boolean",
-    selector: "(string|boolean)",
-    placement: "(string|function)",
-    offset: "(array|string|function)",
-    container: "(string|element|boolean)",
-    fallbackPlacements: "array",
     boundary: "(string|element)",
+    container: "(string|element|boolean)",
     customClass: "(string|function)",
+    delay: "(number|object)",
+    fallbackPlacements: "array",
+    html: "boolean",
+    offset: "(array|string|function)",
+    placement: "(string|function)",
+    popperConfig: "(null|object|function)",
     sanitize: "boolean",
     sanitizeFn: "(null|function)",
-    allowList: "object",
-    popperConfig: "(null|object|function)"
+    selector: "(string|boolean)",
+    template: "string",
+    title: "(string|element|function)",
+    trigger: "string"
 };
 /**
  * Class definition
@@ -3135,12 +3175,14 @@ const DefaultType$3 = {
         super(element, config); // Private
         this._isEnabled = true;
         this._timeout = 0;
-        this._isHovered = false;
+        this._isHovered = null;
         this._activeTrigger = {};
         this._popper = null;
-        this._templateFactory = null; // Protected
+        this._templateFactory = null;
+        this._newContent = null; // Protected
         this.tip = null;
         this._setListeners();
+        if (!this._config.selector) this._fixTitle();
     }
     static get Default() {
         return Default$3;
@@ -3160,15 +3202,9 @@ const DefaultType$3 = {
     toggleEnabled() {
         this._isEnabled = !this._isEnabled;
     }
-    toggle(event) {
+    toggle() {
         if (!this._isEnabled) return;
-        if (event) {
-            const context = this._initializeOnDelegatedTarget(event);
-            context._activeTrigger.click = !context._activeTrigger.click;
-            if (context._isWithActiveTrigger()) context._enter();
-            else context._leave();
-            return;
-        }
+        this._activeTrigger.click = !this._activeTrigger.click;
         if (this._isShown()) {
             this._leave();
             return;
@@ -3178,7 +3214,7 @@ const DefaultType$3 = {
     dispose() {
         clearTimeout(this._timeout);
         EventHandler.off(this._element.closest(SELECTOR_MODAL), EVENT_MODAL_HIDE, this._hideModalHandler);
-        if (this.tip) this.tip.remove();
+        if (this._element.getAttribute("data-bs-original-title")) this._element.setAttribute("title", this._element.getAttribute("data-bs-original-title"));
         this._disposePopper();
         super.dispose();
     }
@@ -3189,6 +3225,8 @@ const DefaultType$3 = {
         const shadowRoot = findShadowRoot(this._element);
         const isInTheDom = (shadowRoot || this._element.ownerDocument.documentElement).contains(this._element);
         if (showEvent.defaultPrevented || !isInTheDom) return;
+         // todo v6 remove this OR make it optional
+        this._disposePopper();
         const tip = this._getTipElement();
         this._element.setAttribute("aria-describedby", tip.getAttribute("id"));
         const { container  } = this._config;
@@ -3196,18 +3234,16 @@ const DefaultType$3 = {
             container.append(tip);
             EventHandler.trigger(this._element, this.constructor.eventName(EVENT_INSERTED));
         }
-        if (this._popper) this._popper.update();
-        else this._createPopper(tip);
+        this._popper = this._createPopper(tip);
         tip.classList.add(CLASS_NAME_SHOW$2); // If this is a touch-enabled device we add extra
         // empty mouseover listeners to the body's immediate children;
         // only needed because of broken event delegation on iOS
         // https://www.quirksmode.org/blog/archives/2014/02/mouse_event_bub.html
         if ("ontouchstart" in document.documentElement) for (const element of [].concat(...document.body.children))EventHandler.on(element, "mouseover", noop);
         const complete = ()=>{
-            const previousHoverState = this._isHovered;
-            this._isHovered = false;
             EventHandler.trigger(this._element, this.constructor.eventName(EVENT_SHOWN$2));
-            if (previousHoverState) this._leave();
+            if (this._isHovered === false) this._leave();
+            this._isHovered = false;
         };
         this._queueCallback(complete, this.tip, this._isAnimated());
     }
@@ -3222,13 +3258,12 @@ const DefaultType$3 = {
         this._activeTrigger[TRIGGER_CLICK] = false;
         this._activeTrigger[TRIGGER_FOCUS] = false;
         this._activeTrigger[TRIGGER_HOVER] = false;
-        this._isHovered = false;
+        this._isHovered = null; // it is a trick to support manual triggering
         const complete = ()=>{
             if (this._isWithActiveTrigger()) return;
-            if (!this._isHovered) tip.remove();
+            if (!this._isHovered) this._disposePopper();
             this._element.removeAttribute("aria-describedby");
             EventHandler.trigger(this._element, this.constructor.eventName(EVENT_HIDDEN$2));
-            this._disposePopper();
         };
         this._queueCallback(complete, this.tip, this._isAnimated());
     }
@@ -3239,7 +3274,7 @@ const DefaultType$3 = {
         return Boolean(this._getTitle());
     }
     _getTipElement() {
-        if (!this.tip) this.tip = this._createTipElement(this._getContentForTemplate());
+        if (!this.tip) this.tip = this._createTipElement(this._newContent || this._getContentForTemplate());
         return this.tip;
     }
     _createTipElement(content) {
@@ -3253,15 +3288,11 @@ const DefaultType$3 = {
         return tip;
     }
     setContent(content) {
-        let isShown = false;
-        if (this.tip) {
-            isShown = this._isShown();
-            this.tip.remove();
-            this.tip = null;
+        this._newContent = content;
+        if (this._isShown()) {
+            this._disposePopper();
+            this.show();
         }
-        this._disposePopper();
-        this.tip = this._createTipElement(content);
-        if (isShown) this.show();
     }
     _getTemplateFactory(content) {
         if (this._templateFactory) this._templateFactory.changeContent(content);
@@ -3280,7 +3311,7 @@ const DefaultType$3 = {
         };
     }
     _getTitle() {
-        return this._config.title;
+        return this._resolvePossibleFunction(this._config.title) || this._element.getAttribute("data-bs-original-title");
     }
     _initializeOnDelegatedTarget(event) {
         return this.constructor.getOrCreateInstance(event.delegateTarget, this._getDelegateConfig());
@@ -3294,7 +3325,7 @@ const DefaultType$3 = {
     _createPopper(tip) {
         const placement = typeof this._config.placement === "function" ? this._config.placement.call(this, tip, this._element) : this._config.placement;
         const attachment = AttachmentMap[placement.toUpperCase()];
-        this._popper = _core.createPopper(this._element, tip, this._getPopperConfig(attachment));
+        return _core.createPopper(this._element, tip, this._getPopperConfig(attachment));
     }
     _getOffset() {
         const { offset  } = this._config;
@@ -3353,7 +3384,10 @@ const DefaultType$3 = {
     _setListeners() {
         const triggers = this._config.trigger.split(" ");
         for (const trigger of triggers){
-            if (trigger === "click") EventHandler.on(this._element, this.constructor.eventName(EVENT_CLICK$1), this._config.selector, (event)=>this.toggle(event));
+            if (trigger === "click") EventHandler.on(this._element, this.constructor.eventName(EVENT_CLICK$1), this._config.selector, (event)=>{
+                const context = this._initializeOnDelegatedTarget(event);
+                context.toggle();
+            });
             else if (trigger !== TRIGGER_MANUAL) {
                 const eventIn = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSEENTER) : this.constructor.eventName(EVENT_FOCUSIN$1);
                 const eventOut = trigger === TRIGGER_HOVER ? this.constructor.eventName(EVENT_MOUSELEAVE) : this.constructor.eventName(EVENT_FOCUSOUT$1);
@@ -3373,17 +3407,12 @@ const DefaultType$3 = {
             if (this._element) this.hide();
         };
         EventHandler.on(this._element.closest(SELECTOR_MODAL), EVENT_MODAL_HIDE, this._hideModalHandler);
-        if (this._config.selector) this._config = {
-            ...this._config,
-            trigger: "manual",
-            selector: ""
-        };
-        else this._fixTitle();
     }
     _fixTitle() {
-        const title = this._config.originalTitle;
+        const title = this._element.getAttribute("title");
         if (!title) return;
-        if (!this._element.getAttribute("aria-label") && !this._element.textContent) this._element.setAttribute("aria-label", title);
+        if (!this._element.getAttribute("aria-label") && !this._element.textContent.trim()) this._element.setAttribute("aria-label", title);
+        this._element.setAttribute("data-bs-original-title", title); // DO NOT USE IT. Is only for backwards compatibility
         this._element.removeAttribute("title");
     }
     _enter() {
@@ -3428,8 +3457,6 @@ const DefaultType$3 = {
             show: config.delay,
             hide: config.delay
         };
-        config.originalTitle = this._element.getAttribute("title") || "";
-        config.title = this._resolvePossibleFunction(config.title) || config.originalTitle;
         if (typeof config.title === "number") config.title = config.title.toString();
         if (typeof config.content === "number") config.content = config.content.toString();
         return config;
@@ -3437,7 +3464,8 @@ const DefaultType$3 = {
     _getDelegateConfig() {
         const config = {};
         for(const key in this._config)if (this.constructor.Default[key] !== this._config[key]) config[key] = this._config[key];
-         // In the future can be replaced with:
+        config.selector = false;
+        config.trigger = "manual"; // In the future can be replaced with:
         // const keysWithDifferentValues = Object.entries(this._config).filter(entry => this.constructor.Default[entry[0]] !== this._config[entry[0]])
         // `Object.fromEntries(keysWithDifferentValues)`
         return config;
@@ -3446,6 +3474,10 @@ const DefaultType$3 = {
         if (this._popper) {
             this._popper.destroy();
             this._popper = null;
+        }
+        if (this.tip) {
+            this.tip.remove();
+            this.tip = null;
         }
     }
     static jQueryInterface(config) {
@@ -3462,7 +3494,7 @@ const DefaultType$3 = {
  */ defineJQueryPlugin(Tooltip);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): popover.js
+ * Bootstrap (v5.2.3): popover.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -3472,14 +3504,14 @@ const SELECTOR_TITLE = ".popover-header";
 const SELECTOR_CONTENT = ".popover-body";
 const Default$2 = {
     ...Tooltip.Default,
-    placement: "right",
+    content: "",
     offset: [
         0,
         8
     ],
-    trigger: "click",
-    content: "",
-    template: '<div class="popover" role="tooltip"><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>'
+    placement: "right",
+    template: '<div class="popover" role="tooltip"><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
+    trigger: "click"
 };
 const DefaultType$2 = {
     ...Tooltip.DefaultType,
@@ -3524,7 +3556,7 @@ const DefaultType$2 = {
  */ defineJQueryPlugin(Popover);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): scrollspy.js
+ * Bootstrap (v5.2.3): scrollspy.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -3552,14 +3584,20 @@ const Default$1 = {
     // TODO: v6 @deprecated, keep it for backwards compatibility reasons
     rootMargin: "0px 0px -25%",
     smoothScroll: false,
-    target: null
+    target: null,
+    threshold: [
+        0.1,
+        0.5,
+        1
+    ]
 };
 const DefaultType$1 = {
     offset: "(number|null)",
     // TODO v6 @deprecated, keep it for backwards compatibility reasons
     rootMargin: "string",
     smoothScroll: "boolean",
-    target: "element"
+    target: "element",
+    threshold: "array"
 };
 /**
  * Class definition
@@ -3599,7 +3637,9 @@ const DefaultType$1 = {
     }
     _configAfterMerge(config) {
         // TODO: on v6 target should be given explicitly & remove the {target: 'ss-target'} case
-        config.target = getElement(config.target) || document.body;
+        config.target = getElement(config.target) || document.body; // TODO: v6 Only for backwards compatibility reasons. Use rootMargin only
+        config.rootMargin = config.offset ? `${config.offset}px 0px -30%` : config.rootMargin;
+        if (typeof config.threshold === "string") config.threshold = config.threshold.split(",").map((value)=>Number.parseFloat(value));
         return config;
     }
     _maybeEnableSmoothScroll() {
@@ -3614,7 +3654,8 @@ const DefaultType$1 = {
                 const height = observableSection.offsetTop - this._element.offsetTop;
                 if (root.scrollTo) {
                     root.scrollTo({
-                        top: height
+                        top: height,
+                        behavior: "smooth"
                     });
                     return;
                 } // Chrome 60 doesn't support `scrollTo`
@@ -3625,12 +3666,8 @@ const DefaultType$1 = {
     _getNewObserver() {
         const options = {
             root: this._rootElement,
-            threshold: [
-                0.1,
-                0.5,
-                1
-            ],
-            rootMargin: this._getRootMargin()
+            threshold: this._config.threshold,
+            rootMargin: this._config.rootMargin
         };
         return new IntersectionObserver((entries)=>this._observerCallback(entries), options);
     }
@@ -3643,23 +3680,20 @@ const DefaultType$1 = {
         const parentScrollTop = (this._rootElement || document.documentElement).scrollTop;
         const userScrollsDown = parentScrollTop >= this._previousScrollData.parentScrollTop;
         this._previousScrollData.parentScrollTop = parentScrollTop;
-        for (const entry1 of entries){
-            if (!entry1.isIntersecting) {
+        for (const entry of entries){
+            if (!entry.isIntersecting) {
                 this._activeTarget = null;
-                this._clearActiveClass(targetElement(entry1));
+                this._clearActiveClass(targetElement(entry));
                 continue;
             }
-            const entryIsLowerThanPrevious = entry1.target.offsetTop >= this._previousScrollData.visibleEntryTop; // if we are scrolling down, pick the bigger offsetTop
+            const entryIsLowerThanPrevious = entry.target.offsetTop >= this._previousScrollData.visibleEntryTop; // if we are scrolling down, pick the bigger offsetTop
             if (userScrollsDown && entryIsLowerThanPrevious) {
-                activate(entry1); // if parent isn't scrolled, let's keep the first visible item, breaking the iteration
+                activate(entry); // if parent isn't scrolled, let's keep the first visible item, breaking the iteration
                 if (!parentScrollTop) return;
                 continue;
             } // if we are scrolling up, pick the smallest offsetTop
-            if (!userScrollsDown && !entryIsLowerThanPrevious) activate(entry1);
+            if (!userScrollsDown && !entryIsLowerThanPrevious) activate(entry);
         }
-    }
-    _getRootMargin() {
-        return this._config.offset ? `${this._config.offset}px 0px -30%` : this._config.rootMargin;
     }
     _initializeTargetsAndObservables() {
         this._targetLinks = new Map();
@@ -3719,7 +3753,7 @@ const DefaultType$1 = {
  */ defineJQueryPlugin(ScrollSpy);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): tab.js
+ * Bootstrap (v5.2.3): tab.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -3744,7 +3778,6 @@ const CLASS_NAME_SHOW$1 = "show";
 const CLASS_DROPDOWN = "dropdown";
 const SELECTOR_DROPDOWN_TOGGLE = ".dropdown-toggle";
 const SELECTOR_DROPDOWN_MENU = ".dropdown-menu";
-const SELECTOR_DROPDOWN_ITEM = ".dropdown-item";
 const NOT_SELECTOR_DROPDOWN_TOGGLE = ":not(.dropdown-toggle)";
 const SELECTOR_TAB_PANEL = '.list-group, .nav, [role="tablist"]';
 const SELECTOR_OUTER = ".nav-item, .list-group-item";
@@ -3786,12 +3819,11 @@ const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"]
         if (!element) return;
         element.classList.add(CLASS_NAME_ACTIVE);
         this._activate(getElementFromSelector(element)); // Search and activate/show the proper section
-        const isAnimated = element.classList.contains(CLASS_NAME_FADE$1);
         const complete = ()=>{
-            if (isAnimated) // todo: maybe is redundant
-            element.classList.add(CLASS_NAME_SHOW$1);
-            if (element.getAttribute("role") !== "tab") return;
-            element.focus();
+            if (element.getAttribute("role") !== "tab") {
+                element.classList.add(CLASS_NAME_SHOW$1);
+                return;
+            }
             element.removeAttribute("tabindex");
             element.setAttribute("aria-selected", true);
             this._toggleDropDown(element, true);
@@ -3799,18 +3831,18 @@ const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"]
                 relatedTarget: relatedElem
             });
         };
-        this._queueCallback(complete, element, isAnimated);
+        this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE$1));
     }
     _deactivate(element, relatedElem) {
         if (!element) return;
         element.classList.remove(CLASS_NAME_ACTIVE);
         element.blur();
         this._deactivate(getElementFromSelector(element)); // Search and deactivate the shown section too
-        const isAnimated = element.classList.contains(CLASS_NAME_FADE$1);
         const complete = ()=>{
-            if (isAnimated) // todo maybe is redundant
-            element.classList.remove(CLASS_NAME_SHOW$1);
-            if (element.getAttribute("role") !== "tab") return;
+            if (element.getAttribute("role") !== "tab") {
+                element.classList.remove(CLASS_NAME_SHOW$1);
+                return;
+            }
             element.setAttribute("aria-selected", false);
             element.setAttribute("tabindex", "-1");
             this._toggleDropDown(element, false);
@@ -3818,7 +3850,7 @@ const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"]
                 relatedTarget: relatedElem
             });
         };
-        this._queueCallback(complete, element, isAnimated);
+        this._queueCallback(complete, element, element.classList.contains(CLASS_NAME_FADE$1));
     }
     _keydown(event) {
         if (![
@@ -3834,7 +3866,12 @@ const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"]
             ARROW_DOWN_KEY
         ].includes(event.key);
         const nextActiveElement = getNextActiveElement(this._getChildren().filter((element)=>!isDisabled(element)), event.target, isNext, true);
-        if (nextActiveElement) Tab.getOrCreateInstance(nextActiveElement).show();
+        if (nextActiveElement) {
+            nextActiveElement.focus({
+                preventScroll: true
+            });
+            Tab.getOrCreateInstance(nextActiveElement).show();
+        }
     }
     _getChildren() {
         // collection of inner elements
@@ -3863,8 +3900,8 @@ const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"]
         this._setAttributeIfNotExists(target, "role", "tabpanel");
         if (child.id) this._setAttributeIfNotExists(target, "aria-labelledby", `#${child.id}`);
     }
-    _toggleDropDown(element1, open) {
-        const outerElem = this._getOuterElement(element1);
+    _toggleDropDown(element, open) {
+        const outerElem = this._getOuterElement(element);
         if (!outerElem.classList.contains(CLASS_DROPDOWN)) return;
         const toggle = (selector, className)=>{
             const element = SelectorEngine.findOne(selector, outerElem);
@@ -3872,7 +3909,6 @@ const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"]
         };
         toggle(SELECTOR_DROPDOWN_TOGGLE, CLASS_NAME_ACTIVE);
         toggle(SELECTOR_DROPDOWN_MENU, CLASS_NAME_SHOW$1);
-        toggle(SELECTOR_DROPDOWN_ITEM, CLASS_NAME_ACTIVE);
         outerElem.setAttribute("aria-expanded", open);
     }
     _setAttributeIfNotExists(element, attribute, value) {
@@ -3916,7 +3952,7 @@ const SELECTOR_DATA_TOGGLE_ACTIVE = `.${CLASS_NAME_ACTIVE}[data-bs-toggle="tab"]
  */ defineJQueryPlugin(Tab);
 /**
  * --------------------------------------------------------------------------
- * Bootstrap (v5.2.0-beta1): toast.js
+ * Bootstrap (v5.2.3): toast.js
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  * --------------------------------------------------------------------------
  */ /**
@@ -4221,10 +4257,10 @@ var _instanceOfJs = require("../dom-utils/instanceOf.js"); // This modifier take
 // and applies them to the HTMLElements such as popper and arrow
 function applyStyles(_ref) {
     var state = _ref.state;
-    Object.keys(state.elements).forEach(function(name1) {
-        var style = state.styles[name1] || {};
-        var attributes = state.attributes[name1] || {};
-        var element = state.elements[name1]; // arrow is optional + virtual elements
+    Object.keys(state.elements).forEach(function(name) {
+        var style = state.styles[name] || {};
+        var attributes = state.attributes[name] || {};
+        var element = state.elements[name]; // arrow is optional + virtual elements
         if (!(0, _instanceOfJs.isHTMLElement)(element) || !(0, _getNodeNameJsDefault.default)(element)) return;
          // Flow doesn't support to extend this property, but it's the most
         // effective way to apply styles to an HTMLElement
@@ -4259,12 +4295,12 @@ function effect(_ref2) {
             var element = state.elements[name];
             var attributes = state.attributes[name] || {};
             var styleProperties = Object.keys(state.styles.hasOwnProperty(name) ? state.styles[name] : initialStyles[name]); // Set all values to an empty string to unset them
-            var style1 = styleProperties.reduce(function(style, property) {
+            var style = styleProperties.reduce(function(style, property) {
                 style[property] = "";
                 return style;
             }, {}); // arrow is optional + virtual elements
             if (!(0, _instanceOfJs.isHTMLElement)(element) || !(0, _getNodeNameJsDefault.default)(element)) return;
-            Object.assign(element.style, style1);
+            Object.assign(element.style, style);
             Object.keys(attributes).forEach(function(attribute) {
                 element.removeAttribute(attribute);
             });
@@ -4454,32 +4490,40 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _instanceOfJs = require("./instanceOf.js");
 var _mathJs = require("../utils/math.js");
-function getBoundingClientRect(element, includeScale) {
+var _getWindowJs = require("./getWindow.js");
+var _getWindowJsDefault = parcelHelpers.interopDefault(_getWindowJs);
+var _isLayoutViewportJs = require("./isLayoutViewport.js");
+var _isLayoutViewportJsDefault = parcelHelpers.interopDefault(_isLayoutViewportJs);
+function getBoundingClientRect(element, includeScale, isFixedStrategy) {
     if (includeScale === void 0) includeScale = false;
-    var rect = element.getBoundingClientRect();
+    if (isFixedStrategy === void 0) isFixedStrategy = false;
+    var clientRect = element.getBoundingClientRect();
     var scaleX = 1;
     var scaleY = 1;
-    if ((0, _instanceOfJs.isHTMLElement)(element) && includeScale) {
-        var offsetHeight = element.offsetHeight;
-        var offsetWidth = element.offsetWidth; // Do not attempt to divide by 0, otherwise we get `Infinity` as scale
-        // Fallback to 1 in case both values are `0`
-        if (offsetWidth > 0) scaleX = (0, _mathJs.round)(rect.width) / offsetWidth || 1;
-        if (offsetHeight > 0) scaleY = (0, _mathJs.round)(rect.height) / offsetHeight || 1;
+    if (includeScale && (0, _instanceOfJs.isHTMLElement)(element)) {
+        scaleX = element.offsetWidth > 0 ? (0, _mathJs.round)(clientRect.width) / element.offsetWidth || 1 : 1;
+        scaleY = element.offsetHeight > 0 ? (0, _mathJs.round)(clientRect.height) / element.offsetHeight || 1 : 1;
     }
+    var _ref = (0, _instanceOfJs.isElement)(element) ? (0, _getWindowJsDefault.default)(element) : window, visualViewport = _ref.visualViewport;
+    var addVisualOffsets = !(0, _isLayoutViewportJsDefault.default)() && isFixedStrategy;
+    var x = (clientRect.left + (addVisualOffsets && visualViewport ? visualViewport.offsetLeft : 0)) / scaleX;
+    var y = (clientRect.top + (addVisualOffsets && visualViewport ? visualViewport.offsetTop : 0)) / scaleY;
+    var width = clientRect.width / scaleX;
+    var height = clientRect.height / scaleY;
     return {
-        width: rect.width / scaleX,
-        height: rect.height / scaleY,
-        top: rect.top / scaleY,
-        right: rect.right / scaleX,
-        bottom: rect.bottom / scaleY,
-        left: rect.left / scaleX,
-        x: rect.left / scaleX,
-        y: rect.top / scaleY
+        width: width,
+        height: height,
+        top: y,
+        right: x + width,
+        bottom: y + height,
+        left: x,
+        x: x,
+        y: y
     };
 }
 exports.default = getBoundingClientRect;
 
-},{"./instanceOf.js":"gYFUC","../utils/math.js":"gQqVe","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gQqVe":[function(require,module,exports) {
+},{"./instanceOf.js":"gYFUC","../utils/math.js":"gQqVe","./getWindow.js":"2SkOo","./isLayoutViewport.js":"3ipHv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"gQqVe":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "max", ()=>max);
@@ -4488,6 +4532,28 @@ parcelHelpers.export(exports, "round", ()=>round);
 var max = Math.max;
 var min = Math.min;
 var round = Math.round;
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3ipHv":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _userAgentJs = require("../utils/userAgent.js");
+var _userAgentJsDefault = parcelHelpers.interopDefault(_userAgentJs);
+function isLayoutViewport() {
+    return !/^((?!chrome|android).)*safari/i.test((0, _userAgentJsDefault.default)());
+}
+exports.default = isLayoutViewport;
+
+},{"../utils/userAgent.js":"1hEx0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1hEx0":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+function getUAString() {
+    var uaData = navigator.userAgentData;
+    if (uaData != null && uaData.brands) return uaData.brands.map(function(item) {
+        return item.brand + "/" + item.version;
+    }).join(" ");
+    return navigator.userAgent;
+}
+exports.default = getUAString;
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"4QxRR":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -4522,14 +4588,17 @@ var _isTableElementJs = require("./isTableElement.js");
 var _isTableElementJsDefault = parcelHelpers.interopDefault(_isTableElementJs);
 var _getParentNodeJs = require("./getParentNode.js");
 var _getParentNodeJsDefault = parcelHelpers.interopDefault(_getParentNodeJs);
+var _userAgentJs = require("../utils/userAgent.js");
+var _userAgentJsDefault = parcelHelpers.interopDefault(_userAgentJs);
 function getTrueOffsetParent(element) {
-    if (!(0, _instanceOfJs.isHTMLElement)(element) || (0, _getComputedStyleJsDefault.default)(element).position === "fixed") return null;
+    if (!(0, _instanceOfJs.isHTMLElement)(element) || // https://github.com/popperjs/popper-core/issues/837
+    (0, _getComputedStyleJsDefault.default)(element).position === "fixed") return null;
     return element.offsetParent;
 } // `.offsetParent` reports `null` for fixed elements, while absolute elements
 // return the containing block
 function getContainingBlock(element) {
-    var isFirefox = navigator.userAgent.toLowerCase().indexOf("firefox") !== -1;
-    var isIE = navigator.userAgent.indexOf("Trident") !== -1;
+    var isFirefox = /firefox/i.test((0, _userAgentJsDefault.default)());
+    var isIE = /Trident/i.test((0, _userAgentJsDefault.default)());
     if (isIE && (0, _instanceOfJs.isHTMLElement)(element)) {
         // In IE 9, 10 and 11 fixed elements containing block is always established by the viewport
         var elementCss = (0, _getComputedStyleJsDefault.default)(element);
@@ -4561,7 +4630,7 @@ function getOffsetParent(element) {
 }
 exports.default = getOffsetParent;
 
-},{"./getWindow.js":"2SkOo","./getNodeName.js":"a2Qom","./getComputedStyle.js":"3mZjB","./instanceOf.js":"gYFUC","./isTableElement.js":"2qBb7","./getParentNode.js":"bIHpd","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3mZjB":[function(require,module,exports) {
+},{"./getWindow.js":"2SkOo","./getNodeName.js":"a2Qom","./getComputedStyle.js":"3mZjB","./instanceOf.js":"gYFUC","./isTableElement.js":"2qBb7","./getParentNode.js":"bIHpd","../utils/userAgent.js":"1hEx0","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"3mZjB":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _getWindowJs = require("./getWindow.js");
@@ -4597,7 +4666,9 @@ function getParentNode(element) {
     if ((0, _getNodeNameJsDefault.default)(element) === "html") return element;
     return(// $FlowFixMe[incompatible-return]
     // $FlowFixMe[prop-missing]
-    element.assignedSlot || element.parentNode || ((0, _instanceOfJs.isShadowRoot)(element) ? element.host : null) || // $FlowFixMe[incompatible-call]: HTMLElement is a Node
+    element.assignedSlot || // step into the shadow DOM of the parent of a slotted node
+    element.parentNode || ((0, _instanceOfJs.isShadowRoot)(element) ? element.host : null) || // ShadowRoot detected
+    // $FlowFixMe[incompatible-call]: HTMLElement is a Node
     (0, _getDocumentElementJsDefault.default)(element) // fallback
     );
 }
@@ -4918,16 +4989,16 @@ function flip(_ref) {
     var makeFallbackChecks = true;
     var firstFittingPlacement = placements[0];
     for(var i = 0; i < placements.length; i++){
-        var placement1 = placements[i];
-        var _basePlacement = (0, _getBasePlacementJsDefault.default)(placement1);
-        var isStartVariation = (0, _getVariationJsDefault.default)(placement1) === (0, _enumsJs.start);
+        var placement = placements[i];
+        var _basePlacement = (0, _getBasePlacementJsDefault.default)(placement);
+        var isStartVariation = (0, _getVariationJsDefault.default)(placement) === (0, _enumsJs.start);
         var isVertical = [
             (0, _enumsJs.top),
             (0, _enumsJs.bottom)
         ].indexOf(_basePlacement) >= 0;
         var len = isVertical ? "width" : "height";
         var overflow = (0, _detectOverflowJsDefault.default)(state, {
-            placement: placement1,
+            placement: placement,
             boundary: boundary,
             rootBoundary: rootBoundary,
             altBoundary: altBoundary,
@@ -4942,11 +5013,11 @@ function flip(_ref) {
         if (checks.every(function(check) {
             return check;
         })) {
-            firstFittingPlacement = placement1;
+            firstFittingPlacement = placement;
             makeFallbackChecks = false;
             break;
         }
-        checksMap.set(placement1, checks);
+        checksMap.set(placement, checks);
     }
     if (makeFallbackChecks) {
         // `2` may be desired in some cases – research later
@@ -4963,8 +5034,8 @@ function flip(_ref) {
                 return "break";
             }
         };
-        for(var _i1 = numberOfChecks; _i1 > 0; _i1--){
-            var _ret = _loop(_i1);
+        for(var _i = numberOfChecks; _i > 0; _i--){
+            var _ret = _loop(_i);
             if (_ret === "break") break;
         }
     }
@@ -5038,12 +5109,12 @@ var _expandToHashMapJs = require("./expandToHashMap.js"); // eslint-disable-next
 var _expandToHashMapJsDefault = parcelHelpers.interopDefault(_expandToHashMapJs);
 function detectOverflow(state, options) {
     if (options === void 0) options = {};
-    var _options = options, _options$placement = _options.placement, placement = _options$placement === void 0 ? state.placement : _options$placement, _options$boundary = _options.boundary, boundary = _options$boundary === void 0 ? (0, _enumsJs.clippingParents) : _options$boundary, _options$rootBoundary = _options.rootBoundary, rootBoundary = _options$rootBoundary === void 0 ? (0, _enumsJs.viewport) : _options$rootBoundary, _options$elementConte = _options.elementContext, elementContext = _options$elementConte === void 0 ? (0, _enumsJs.popper) : _options$elementConte, _options$altBoundary = _options.altBoundary, altBoundary = _options$altBoundary === void 0 ? false : _options$altBoundary, _options$padding = _options.padding, padding = _options$padding === void 0 ? 0 : _options$padding;
+    var _options = options, _options$placement = _options.placement, placement = _options$placement === void 0 ? state.placement : _options$placement, _options$strategy = _options.strategy, strategy = _options$strategy === void 0 ? state.strategy : _options$strategy, _options$boundary = _options.boundary, boundary = _options$boundary === void 0 ? (0, _enumsJs.clippingParents) : _options$boundary, _options$rootBoundary = _options.rootBoundary, rootBoundary = _options$rootBoundary === void 0 ? (0, _enumsJs.viewport) : _options$rootBoundary, _options$elementConte = _options.elementContext, elementContext = _options$elementConte === void 0 ? (0, _enumsJs.popper) : _options$elementConte, _options$altBoundary = _options.altBoundary, altBoundary = _options$altBoundary === void 0 ? false : _options$altBoundary, _options$padding = _options.padding, padding = _options$padding === void 0 ? 0 : _options$padding;
     var paddingObject = (0, _mergePaddingObjectJsDefault.default)(typeof padding !== "number" ? padding : (0, _expandToHashMapJsDefault.default)(padding, (0, _enumsJs.basePlacements)));
     var altContext = elementContext === (0, _enumsJs.popper) ? (0, _enumsJs.reference) : (0, _enumsJs.popper);
     var popperRect = state.rects.popper;
     var element = state.elements[altBoundary ? altContext : elementContext];
-    var clippingClientRect = (0, _getClippingRectJsDefault.default)((0, _instanceOfJs.isElement)(element) ? element : element.contextElement || (0, _getDocumentElementJsDefault.default)(state.elements.popper), boundary, rootBoundary);
+    var clippingClientRect = (0, _getClippingRectJsDefault.default)((0, _instanceOfJs.isElement)(element) ? element : element.contextElement || (0, _getDocumentElementJsDefault.default)(state.elements.popper), boundary, rootBoundary, strategy);
     var referenceClientRect = (0, _getBoundingClientRectJsDefault.default)(state.elements.reference);
     var popperOffsets = (0, _computeOffsetsJsDefault.default)({
         reference: referenceClientRect,
@@ -5107,8 +5178,8 @@ var _getNodeNameJsDefault = parcelHelpers.interopDefault(_getNodeNameJs);
 var _rectToClientRectJs = require("../utils/rectToClientRect.js");
 var _rectToClientRectJsDefault = parcelHelpers.interopDefault(_rectToClientRectJs);
 var _mathJs = require("../utils/math.js");
-function getInnerBoundingClientRect(element) {
-    var rect = (0, _getBoundingClientRectJsDefault.default)(element);
+function getInnerBoundingClientRect(element, strategy) {
+    var rect = (0, _getBoundingClientRectJsDefault.default)(element, false, strategy === "fixed");
     rect.top = rect.top + element.clientTop;
     rect.left = rect.left + element.clientLeft;
     rect.bottom = rect.top + element.clientHeight;
@@ -5119,8 +5190,8 @@ function getInnerBoundingClientRect(element) {
     rect.y = rect.top;
     return rect;
 }
-function getClientRectFromMixedType(element, clippingParent) {
-    return clippingParent === (0, _enumsJs.viewport) ? (0, _rectToClientRectJsDefault.default)((0, _getViewportRectJsDefault.default)(element)) : (0, _instanceOfJs.isElement)(clippingParent) ? getInnerBoundingClientRect(clippingParent) : (0, _rectToClientRectJsDefault.default)((0, _getDocumentRectJsDefault.default)((0, _getDocumentElementJsDefault.default)(element)));
+function getClientRectFromMixedType(element, clippingParent, strategy) {
+    return clippingParent === (0, _enumsJs.viewport) ? (0, _rectToClientRectJsDefault.default)((0, _getViewportRectJsDefault.default)(element, strategy)) : (0, _instanceOfJs.isElement)(clippingParent) ? getInnerBoundingClientRect(clippingParent, strategy) : (0, _rectToClientRectJsDefault.default)((0, _getDocumentRectJsDefault.default)((0, _getDocumentElementJsDefault.default)(element)));
 } // A "clipping parent" is an overflowable container with the characteristic of
 // clipping (or hiding) overflowing elements with a position different from
 // `initial`
@@ -5137,20 +5208,20 @@ function getClippingParents(element) {
         return (0, _instanceOfJs.isElement)(clippingParent) && (0, _containsJsDefault.default)(clippingParent, clipperElement) && (0, _getNodeNameJsDefault.default)(clippingParent) !== "body";
     });
 } // Gets the maximum area that the element is visible in due to any number of
-function getClippingRect(element, boundary, rootBoundary) {
+function getClippingRect(element, boundary, rootBoundary, strategy) {
     var mainClippingParents = boundary === "clippingParents" ? getClippingParents(element) : [].concat(boundary);
     var clippingParents = [].concat(mainClippingParents, [
         rootBoundary
     ]);
     var firstClippingParent = clippingParents[0];
     var clippingRect = clippingParents.reduce(function(accRect, clippingParent) {
-        var rect = getClientRectFromMixedType(element, clippingParent);
+        var rect = getClientRectFromMixedType(element, clippingParent, strategy);
         accRect.top = (0, _mathJs.max)(rect.top, accRect.top);
         accRect.right = (0, _mathJs.min)(rect.right, accRect.right);
         accRect.bottom = (0, _mathJs.min)(rect.bottom, accRect.bottom);
         accRect.left = (0, _mathJs.max)(rect.left, accRect.left);
         return accRect;
-    }, getClientRectFromMixedType(element, firstClippingParent));
+    }, getClientRectFromMixedType(element, firstClippingParent, strategy));
     clippingRect.width = clippingRect.right - clippingRect.left;
     clippingRect.height = clippingRect.bottom - clippingRect.top;
     clippingRect.x = clippingRect.left;
@@ -5168,29 +5239,21 @@ var _getDocumentElementJs = require("./getDocumentElement.js");
 var _getDocumentElementJsDefault = parcelHelpers.interopDefault(_getDocumentElementJs);
 var _getWindowScrollBarXJs = require("./getWindowScrollBarX.js");
 var _getWindowScrollBarXJsDefault = parcelHelpers.interopDefault(_getWindowScrollBarXJs);
-function getViewportRect(element) {
+var _isLayoutViewportJs = require("./isLayoutViewport.js");
+var _isLayoutViewportJsDefault = parcelHelpers.interopDefault(_isLayoutViewportJs);
+function getViewportRect(element, strategy) {
     var win = (0, _getWindowJsDefault.default)(element);
     var html = (0, _getDocumentElementJsDefault.default)(element);
     var visualViewport = win.visualViewport;
     var width = html.clientWidth;
     var height = html.clientHeight;
     var x = 0;
-    var y = 0; // NB: This isn't supported on iOS <= 12. If the keyboard is open, the popper
-    // can be obscured underneath it.
-    // Also, `html.clientHeight` adds the bottom bar height in Safari iOS, even
-    // if it isn't open, so if this isn't available, the popper will be detected
-    // to overflow the bottom of the screen too early.
+    var y = 0;
     if (visualViewport) {
         width = visualViewport.width;
-        height = visualViewport.height; // Uses Layout Viewport (like Chrome; Safari does not currently)
-        // In Chrome, it returns a value very close to 0 (+/-) but contains rounding
-        // errors due to floating point numbers, so we need to check precision.
-        // Safari returns a number <= 0, usually < -1 when pinch-zoomed
-        // Feature detection fails in mobile emulation mode in Chrome.
-        // Math.abs(win.innerWidth / visualViewport.scale - visualViewport.width) <
-        // 0.001
-        // Fallback here: "Not Safari" userAgent
-        if (!/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+        height = visualViewport.height;
+        var layoutViewport = (0, _isLayoutViewportJsDefault.default)();
+        if (layoutViewport || !layoutViewport && strategy === "fixed") {
             x = visualViewport.offsetLeft;
             y = visualViewport.offsetTop;
         }
@@ -5204,7 +5267,7 @@ function getViewportRect(element) {
 }
 exports.default = getViewportRect;
 
-},{"./getWindow.js":"2SkOo","./getDocumentElement.js":"eJ9Y1","./getWindowScrollBarX.js":"sz4Ld","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"sz4Ld":[function(require,module,exports) {
+},{"./getWindow.js":"2SkOo","./getDocumentElement.js":"eJ9Y1","./getWindowScrollBarX.js":"sz4Ld","./isLayoutViewport.js":"3ipHv","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"sz4Ld":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _getBoundingClientRectJs = require("./getBoundingClientRect.js");
@@ -5421,8 +5484,8 @@ var _getBasePlacementJs = require("./getBasePlacement.js");
 var _getBasePlacementJsDefault = parcelHelpers.interopDefault(_getBasePlacementJs);
 function computeAutoPlacement(state, options) {
     if (options === void 0) options = {};
-    var _options = options, placement1 = _options.placement, boundary = _options.boundary, rootBoundary = _options.rootBoundary, padding = _options.padding, flipVariations = _options.flipVariations, _options$allowedAutoP = _options.allowedAutoPlacements, allowedAutoPlacements = _options$allowedAutoP === void 0 ? (0, _enumsJs.placements) : _options$allowedAutoP;
-    var variation = (0, _getVariationJsDefault.default)(placement1);
+    var _options = options, placement = _options.placement, boundary = _options.boundary, rootBoundary = _options.rootBoundary, padding = _options.padding, flipVariations = _options.flipVariations, _options$allowedAutoP = _options.allowedAutoPlacements, allowedAutoPlacements = _options$allowedAutoP === void 0 ? (0, _enumsJs.placements) : _options$allowedAutoP;
+    var variation = (0, _getVariationJsDefault.default)(placement);
     var placements = variation ? flipVariations ? (0, _enumsJs.variationPlacements) : (0, _enumsJs.variationPlacements).filter(function(placement) {
         return (0, _getVariationJsDefault.default)(placement) === variation;
     }) : (0, _enumsJs.basePlacements);
@@ -5525,15 +5588,15 @@ parcelHelpers.export(exports, "distanceAndSkiddingToXY", ()=>distanceAndSkidding
 var _getBasePlacementJs = require("../utils/getBasePlacement.js");
 var _getBasePlacementJsDefault = parcelHelpers.interopDefault(_getBasePlacementJs);
 var _enumsJs = require("../enums.js"); // eslint-disable-next-line import/no-unused-modules
-function distanceAndSkiddingToXY(placement, rects, offset1) {
+function distanceAndSkiddingToXY(placement, rects, offset) {
     var basePlacement = (0, _getBasePlacementJsDefault.default)(placement);
     var invertDistance = [
         (0, _enumsJs.left),
         (0, _enumsJs.top)
     ].indexOf(basePlacement) >= 0 ? -1 : 1;
-    var _ref = typeof offset1 === "function" ? offset1(Object.assign({}, rects, {
+    var _ref = typeof offset === "function" ? offset(Object.assign({}, rects, {
         placement: placement
-    })) : offset1, skidding = _ref[0], distance = _ref[1];
+    })) : offset, skidding = _ref[0], distance = _ref[1];
     skidding = skidding || 0;
     distance = (distance || 0) * invertDistance;
     return [
@@ -5549,12 +5612,12 @@ function distanceAndSkiddingToXY(placement, rects, offset1) {
 }
 function offset(_ref2) {
     var state = _ref2.state, options = _ref2.options, name = _ref2.name;
-    var _options$offset = options.offset, offset2 = _options$offset === void 0 ? [
+    var _options$offset = options.offset, offset = _options$offset === void 0 ? [
         0,
         0
     ] : _options$offset;
     var data = (0, _enumsJs.placements).reduce(function(acc, placement) {
-        acc[placement] = distanceAndSkiddingToXY(placement, state.rects, offset2);
+        acc[placement] = distanceAndSkiddingToXY(placement, state.rects, offset);
         return acc;
     }, {});
     var _data$state$placement = data[state.placement], x = _data$state$placement.x, y = _data$state$placement.y;
@@ -5778,16 +5841,16 @@ function areValidElements() {
 function popperGenerator(generatorOptions) {
     if (generatorOptions === void 0) generatorOptions = {};
     var _generatorOptions = generatorOptions, _generatorOptions$def = _generatorOptions.defaultModifiers, defaultModifiers = _generatorOptions$def === void 0 ? [] : _generatorOptions$def, _generatorOptions$def2 = _generatorOptions.defaultOptions, defaultOptions = _generatorOptions$def2 === void 0 ? DEFAULT_OPTIONS : _generatorOptions$def2;
-    return function createPopper(reference1, popper1, options1) {
-        if (options1 === void 0) options1 = defaultOptions;
-        var state1 = {
+    return function createPopper(reference, popper, options) {
+        if (options === void 0) options = defaultOptions;
+        var state = {
             placement: "bottom",
             orderedModifiers: [],
             options: Object.assign({}, DEFAULT_OPTIONS, defaultOptions),
             modifiersData: {},
             elements: {
-                reference: reference1,
-                popper: popper1
+                reference: reference,
+                popper: popper
             },
             attributes: {},
             styles: {}
@@ -5795,27 +5858,27 @@ function popperGenerator(generatorOptions) {
         var effectCleanupFns = [];
         var isDestroyed = false;
         var instance = {
-            state: state1,
+            state: state,
             setOptions: function setOptions(setOptionsAction) {
-                var options = typeof setOptionsAction === "function" ? setOptionsAction(state1.options) : setOptionsAction;
+                var options = typeof setOptionsAction === "function" ? setOptionsAction(state.options) : setOptionsAction;
                 cleanupModifierEffects();
-                state1.options = Object.assign({}, defaultOptions, state1.options, options);
-                state1.scrollParents = {
-                    reference: (0, _instanceOfJs.isElement)(reference1) ? (0, _listScrollParentsJsDefault.default)(reference1) : reference1.contextElement ? (0, _listScrollParentsJsDefault.default)(reference1.contextElement) : [],
-                    popper: (0, _listScrollParentsJsDefault.default)(popper1)
+                state.options = Object.assign({}, defaultOptions, state.options, options);
+                state.scrollParents = {
+                    reference: (0, _instanceOfJs.isElement)(reference) ? (0, _listScrollParentsJsDefault.default)(reference) : reference.contextElement ? (0, _listScrollParentsJsDefault.default)(reference.contextElement) : [],
+                    popper: (0, _listScrollParentsJsDefault.default)(popper)
                 }; // Orders the modifiers based on their dependencies and `phase`
                 // properties
-                var orderedModifiers = (0, _orderModifiersJsDefault.default)((0, _mergeByNameJsDefault.default)([].concat(defaultModifiers, state1.options.modifiers))); // Strip out disabled modifiers
-                state1.orderedModifiers = orderedModifiers.filter(function(m) {
+                var orderedModifiers = (0, _orderModifiersJsDefault.default)((0, _mergeByNameJsDefault.default)([].concat(defaultModifiers, state.options.modifiers))); // Strip out disabled modifiers
+                state.orderedModifiers = orderedModifiers.filter(function(m) {
                     return m.enabled;
                 }); // Validate the provided modifiers so that the consumer will get warned
-                var modifiers = (0, _uniqueByJsDefault.default)([].concat(orderedModifiers, state1.options.modifiers), function(_ref) {
+                var modifiers = (0, _uniqueByJsDefault.default)([].concat(orderedModifiers, state.options.modifiers), function(_ref) {
                     var name = _ref.name;
                     return name;
                 });
                 (0, _validateModifiersJsDefault.default)(modifiers);
-                if ((0, _getBasePlacementJsDefault.default)(state1.options.placement) === (0, _enumsJs.auto)) {
-                    var flipModifier = state1.orderedModifiers.find(function(_ref2) {
+                if ((0, _getBasePlacementJsDefault.default)(state.options.placement) === (0, _enumsJs.auto)) {
+                    var flipModifier = state.orderedModifiers.find(function(_ref2) {
                         var name = _ref2.name;
                         return name === "flip";
                     });
@@ -5824,7 +5887,7 @@ function popperGenerator(generatorOptions) {
                         "present and enabled to work."
                     ].join(" "));
                 }
-                var _getComputedStyle = (0, _getComputedStyleJsDefault.default)(popper1), marginTop = _getComputedStyle.marginTop, marginRight = _getComputedStyle.marginRight, marginBottom = _getComputedStyle.marginBottom, marginLeft = _getComputedStyle.marginLeft; // We no longer take into account `margins` on the popper, and it can
+                var _getComputedStyle = (0, _getComputedStyleJsDefault.default)(popper), marginTop = _getComputedStyle.marginTop, marginRight = _getComputedStyle.marginRight, marginBottom = _getComputedStyle.marginBottom, marginLeft = _getComputedStyle.marginLeft; // We no longer take into account `margins` on the popper, and it can
                 // cause bugs with positioning, so we'll warn the consumer
                 if ([
                     marginTop,
@@ -5850,47 +5913,47 @@ function popperGenerator(generatorOptions) {
             // prefer the async Popper#update method
             forceUpdate: function forceUpdate() {
                 if (isDestroyed) return;
-                var _state$elements = state1.elements, reference = _state$elements.reference, popper = _state$elements.popper; // Don't proceed if `reference` or `popper` are not valid elements
+                var _state$elements = state.elements, reference = _state$elements.reference, popper = _state$elements.popper; // Don't proceed if `reference` or `popper` are not valid elements
                 // anymore
                 if (!areValidElements(reference, popper)) {
                     console.error(INVALID_ELEMENT_ERROR);
                     return;
                 } // Store the reference and popper rects to be read by modifiers
-                state1.rects = {
-                    reference: (0, _getCompositeRectJsDefault.default)(reference, (0, _getOffsetParentJsDefault.default)(popper), state1.options.strategy === "fixed"),
+                state.rects = {
+                    reference: (0, _getCompositeRectJsDefault.default)(reference, (0, _getOffsetParentJsDefault.default)(popper), state.options.strategy === "fixed"),
                     popper: (0, _getLayoutRectJsDefault.default)(popper)
                 }; // Modifiers have the ability to reset the current update cycle. The
                 // most common use case for this is the `flip` modifier changing the
                 // placement, which then needs to re-run all the modifiers, because the
                 // logic was previously ran for the previous placement and is therefore
                 // stale/incorrect
-                state1.reset = false;
-                state1.placement = state1.options.placement; // On each update cycle, the `modifiersData` property for each modifier
+                state.reset = false;
+                state.placement = state.options.placement; // On each update cycle, the `modifiersData` property for each modifier
                 // is filled with the initial data specified by the modifier. This means
                 // it doesn't persist and is fresh on each update.
                 // To ensure persistent data, use `${name}#persistent`
-                state1.orderedModifiers.forEach(function(modifier) {
-                    return state1.modifiersData[modifier.name] = Object.assign({}, modifier.data);
+                state.orderedModifiers.forEach(function(modifier) {
+                    return state.modifiersData[modifier.name] = Object.assign({}, modifier.data);
                 });
                 var __debug_loops__ = 0;
-                for(var index = 0; index < state1.orderedModifiers.length; index++){
+                for(var index = 0; index < state.orderedModifiers.length; index++){
                     __debug_loops__ += 1;
                     if (__debug_loops__ > 100) {
                         console.error(INFINITE_LOOP_ERROR);
                         break;
                     }
-                    if (state1.reset === true) {
-                        state1.reset = false;
+                    if (state.reset === true) {
+                        state.reset = false;
                         index = -1;
                         continue;
                     }
-                    var _state$orderedModifie = state1.orderedModifiers[index], fn = _state$orderedModifie.fn, _state$orderedModifie2 = _state$orderedModifie.options, _options = _state$orderedModifie2 === void 0 ? {} : _state$orderedModifie2, name = _state$orderedModifie.name;
-                    if (typeof fn === "function") state1 = fn({
-                        state: state1,
+                    var _state$orderedModifie = state.orderedModifiers[index], fn = _state$orderedModifie.fn, _state$orderedModifie2 = _state$orderedModifie.options, _options = _state$orderedModifie2 === void 0 ? {} : _state$orderedModifie2, name = _state$orderedModifie.name;
+                    if (typeof fn === "function") state = fn({
+                        state: state,
                         options: _options,
                         name: name,
                         instance: instance
-                    }) || state1;
+                    }) || state;
                 }
             },
             // Async and optimistically optimized update – it will not be executed if
@@ -5898,7 +5961,7 @@ function popperGenerator(generatorOptions) {
             update: (0, _debounceJsDefault.default)(function() {
                 return new Promise(function(resolve) {
                     instance.forceUpdate();
-                    resolve(state1);
+                    resolve(state);
                 });
             }),
             destroy: function destroy() {
@@ -5906,23 +5969,23 @@ function popperGenerator(generatorOptions) {
                 isDestroyed = true;
             }
         };
-        if (!areValidElements(reference1, popper1)) {
+        if (!areValidElements(reference, popper)) {
             console.error(INVALID_ELEMENT_ERROR);
             return instance;
         }
-        instance.setOptions(options1).then(function(state) {
-            if (!isDestroyed && options1.onFirstUpdate) options1.onFirstUpdate(state);
+        instance.setOptions(options).then(function(state) {
+            if (!isDestroyed && options.onFirstUpdate) options.onFirstUpdate(state);
         }); // Modifiers have the ability to execute arbitrary code before the first
         // update cycle runs. They will be executed in the same order as the update
         // cycle. This is useful when a modifier adds some persistent data that
         // other modifiers need to use, but the modifier is run after the dependent
         // one.
         function runModifierEffects() {
-            state1.orderedModifiers.forEach(function(_ref3) {
+            state.orderedModifiers.forEach(function(_ref3) {
                 var name = _ref3.name, _ref3$options = _ref3.options, options = _ref3$options === void 0 ? {} : _ref3$options, effect = _ref3.effect;
                 if (typeof effect === "function") {
                     var cleanupFn = effect({
-                        state: state1,
+                        state: state,
                         name: name,
                         instance: instance,
                         options: options
@@ -5971,7 +6034,7 @@ function getCompositeRect(elementOrVirtualElement, offsetParent, isFixed) {
     var isOffsetParentAnElement = (0, _instanceOfJs.isHTMLElement)(offsetParent);
     var offsetParentIsScaled = (0, _instanceOfJs.isHTMLElement)(offsetParent) && isElementScaled(offsetParent);
     var documentElement = (0, _getDocumentElementJsDefault.default)(offsetParent);
-    var rect = (0, _getBoundingClientRectJsDefault.default)(elementOrVirtualElement, offsetParentIsScaled);
+    var rect = (0, _getBoundingClientRectJsDefault.default)(elementOrVirtualElement, offsetParentIsScaled, isFixed);
     var scroll = {
         scrollLeft: 0,
         scrollTop: 0
@@ -5981,7 +6044,8 @@ function getCompositeRect(elementOrVirtualElement, offsetParent, isFixed) {
         y: 0
     };
     if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
-        if ((0, _getNodeNameJsDefault.default)(offsetParent) !== "body" || (0, _isScrollParentJsDefault.default)(documentElement)) scroll = (0, _getNodeScrollJsDefault.default)(offsetParent);
+        if ((0, _getNodeNameJsDefault.default)(offsetParent) !== "body" || // https://github.com/popperjs/popper-core/issues/1078
+        (0, _isScrollParentJsDefault.default)(documentElement)) scroll = (0, _getNodeScrollJsDefault.default)(offsetParent);
         if ((0, _instanceOfJs.isHTMLElement)(offsetParent)) {
             offsets = (0, _getBoundingClientRectJsDefault.default)(offsetParent, true);
             offsets.x += offsetParent.clientLeft;
@@ -6173,7 +6237,7 @@ exports.default = uniqueBy;
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 function mergeByName(modifiers) {
-    var merged1 = modifiers.reduce(function(merged, current) {
+    var merged = modifiers.reduce(function(merged, current) {
         var existing = merged[current.name];
         merged[current.name] = existing ? Object.assign({}, existing, current, {
             options: Object.assign({}, existing.options, current.options),
@@ -6181,8 +6245,8 @@ function mergeByName(modifiers) {
         }) : current;
         return merged;
     }, {}); // IE11 does not support Object.values
-    return Object.keys(merged1).map(function(key) {
-        return merged1[key];
+    return Object.keys(merged).map(function(key) {
+        return merged[key];
     });
 }
 exports.default = mergeByName;
@@ -6190,13 +6254,13 @@ exports.default = mergeByName;
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"1PuRF":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "createPopperLite", ()=>(0, _popperLiteJs.createPopper)) // eslint-disable-next-line import/no-unused-modules
+;
 parcelHelpers.export(exports, "createPopper", ()=>createPopper) // eslint-disable-next-line import/no-unused-modules
 ;
 parcelHelpers.export(exports, "popperGenerator", ()=>(0, _createPopperJs.popperGenerator));
 parcelHelpers.export(exports, "defaultModifiers", ()=>defaultModifiers);
 parcelHelpers.export(exports, "detectOverflow", ()=>(0, _createPopperJs.detectOverflow));
-parcelHelpers.export(exports, "createPopperLite", ()=>(0, _popperLiteJs.createPopper)) // eslint-disable-next-line import/no-unused-modules
-;
 var _createPopperJs = require("./createPopper.js");
 var _eventListenersJs = require("./modifiers/eventListeners.js");
 var _eventListenersJsDefault = parcelHelpers.interopDefault(_eventListenersJs);
@@ -6260,6 +6324,6 @@ var createPopper = /*#__PURE__*/ (0, _createPopperJs.popperGenerator)({
     defaultModifiers: defaultModifiers
 }); // eslint-disable-next-line import/no-unused-modules
 
-},{"./createPopper.js":"cHuNp","./modifiers/eventListeners.js":"hBKsL","./modifiers/popperOffsets.js":"6I679","./modifiers/computeStyles.js":"gDlm2","./modifiers/applyStyles.js":"4iMn4","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["i0JHw","9Stbe"], "9Stbe", "parcelRequire5242")
+},{"./createPopper.js":"cHuNp","./modifiers/eventListeners.js":"hBKsL","./modifiers/popperOffsets.js":"6I679","./modifiers/computeStyles.js":"gDlm2","./modifiers/applyStyles.js":"4iMn4","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["gNovn","9Stbe"], "9Stbe", "parcelRequire5242")
 
 //# sourceMappingURL=index.605b2e75.js.map

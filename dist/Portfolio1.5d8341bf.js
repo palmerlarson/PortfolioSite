@@ -142,13 +142,13 @@
       this[globalName] = mainExports;
     }
   }
-})({"hhJ7P":[function(require,module,exports) {
+})({"2rYSy":[function(require,module,exports) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
-module.bundle.HMR_BUNDLE_ID = "e33f5fc4cb8b8ee6";
+module.bundle.HMR_BUNDLE_ID = "2039d4895d8341bf";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, chrome, browser, globalThis, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -531,20 +531,8 @@ function hmrAcceptRun(bundle, id) {
     acceptedAssets[id] = true;
 }
 
-},{}],"afIso":[function(require,module,exports) {
-var typed = new Typed("#typed", {
-    stringsElement: "#typed-strings",
-    typeSpeed: 40,
-    backSpeed: 20,
-    backDelay: 3000,
-    loop: true
-});
-GitHubActivity.feed({
-    username: "palmerlarson",
-    selector: "#feed",
-    limit: 20
-});
+},{}],"dJZfo":[function(require,module,exports) {
 
-},{}]},["hhJ7P","afIso"], "afIso", "parcelRequire5242")
+},{}]},["2rYSy","dJZfo"], "dJZfo", "parcelRequire5242")
 
-//# sourceMappingURL=index.cb8b8ee6.js.map
+//# sourceMappingURL=Portfolio1.5d8341bf.js.map

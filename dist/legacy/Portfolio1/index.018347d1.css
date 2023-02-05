@@ -300,7 +300,7 @@ footer {
 }
 
 .project-link:hover {
-  animation: bounce .5s;
+  animation: .5s bounce;
 }
 
 @keyframes switchImagePeopleCounter {
@@ -314,7 +314,7 @@ footer {
 }
 
 .project-item#peopleCounter:hover {
-  animation: switchImagePeopleCounter 5s;
+  animation: 5s switchImagePeopleCounter;
 }
 
 .project-language {
