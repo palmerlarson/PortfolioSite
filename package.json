@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "parcel public/index.html",
+    "dev": "parcel views/pages/index.ejs",
     "prebuild": "npx rimraf build",
-    "build": "parcel build --public-url ./ ./public/*.html --dist-dir build",
+    "build": "parcel build public/css/* public/scripts/* public/images/* --dist-dir --no-source-maps",
     "prod": "parcel build --public-url ./ ./public/*.html --dist-dir dist"
   },
   "keywords": [],
@@ -16,8 +16,10 @@
     "@primer/css": "^20.1.1",
     "@primer/octicons": "^17.2.0",
     "aws-sdk": "^2.1144.0",
+    "body-parser": "^1.20.1",
     "bootstrap": "^5.2.0-beta1",
-    "express": "^4.18.1",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
     "github-activity-feed": "^0.3.0",
     "jquery": "^3.6.0",
     "mustache": "^4.2.0",

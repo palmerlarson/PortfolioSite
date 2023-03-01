@@ -1,2 +1,0 @@
-let x=document.getElementsByClassName("bar");const mobileNav=()=>{let e=document.getElementById("myCheck"),l=document.getElementById("burger");if(1==e.checked)for(i=0;i<x.length;i++)x[i].style.display="block";else for(i=0;i<x.length;i++)x[i].style.display="none";if("none"==l.style.display)for(i=0;i<x.length;i++)x[i].style.display="inline-block"};window.onresize=function(){if(window.innerWidth>1065)for(i=0;i<x.length;i++)x[i].style.display="inline-block";else for(i=0;i<x.length;i++)x[i].style.display="none"};
-//# sourceMappingURL=index.7f36ef55.js.map

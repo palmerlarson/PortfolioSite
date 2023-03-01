@@ -1,0 +1,36 @@
+<header class="container">
+    <nav class="navbar navbar-expand-lg navbar-light border-bottom-dark">
+        <img src="images/palmtree.png" alt="palmtard" class="palmtree">
+        <button class="navbar-toggler hamburger" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <% if(title == 'home'){ %>
+                        <a class="nav-link active" aria-current="page" href="/">Home</a>
+                    <% } else { %>
+                        <a class="nav-link" href="/">Home</a>
+                    <% } %>
+                </li>
+                <li class="nav-item">
+                    <% if(title == 'resume'){ %>
+                        <a class="nav-link active" aria-current="page" href="/resume">Resume</a>
+                    <% } else { %>
+                        <a class="nav-link" href="/resume">Resume</a>
+                    <% } %>
+                </li>
+                <li class="nav-item">
+                    <% if(title == 'blog'){ %>
+                        <a class="nav-link active" aria-current="page" href="/blog">Blog</a>
+                    <% } else { %>
+                        <a class="nav-link" href="/blog">Blog</a>
+                    <% } %>
+                </li>
+            </ul>
+            <div class="col-auto">
+                <button class="btn btn-dark" id="btnSwitch"><i class="fa-solid fa-moon"></i></button>
+            </div>
+        </div>
+    </nav>
+</header>

@@ -87,8 +87,7 @@ body {
 }
 
 .box:hover {
-	-webkit-transform: scale(1.1, 1.1);
-	transform: scale(1.1, 1.1);
+	transform: scale(1.05);
 }
 
 .box:hover::after {
@@ -142,6 +141,75 @@ body {
     border: 1px solid white;
 }
 
+div.card {
+	height: 520px;
+}
+
+div.view-all-btn-wrapper {
+	margin-top: 1rem;
+	a.view-all-btn {
+		color: white;
+		width: auto !important;
+		margin: 0 auto;
+		background-color: #775e14e3;
+		border-radius: 8px;
+		text-decoration: none;
+		padding: 0.5rem;
+		font-weight: bold;
+		letter-spacing: 1px;
+		box-shadow: rgb(0 0 0 / 24%) 0px 3px 8px;
+		transform: translateY(0px);
+		transition: transform .5s ease, box-shadow .5s ease;
+		&:hover {
+			box-shadow: 0 13px 8px #0000003d;
+    		transform: translateY(-5px);
+			transition: all .5s ease;
+		}
+	}
+}
+
+nav.navbar {
+	padding: 0;
+	margin: 0;
+	img.palmtree {
+		width: 50px;
+		margin-right: 5px;
+	}
+}
+
+li.nav-item {
+	margin: 0 10px;
+	a.nav-link {
+		padding: 16px 0px;
+		border-bottom: 1px solid rgba(0, 0, 0, 0);
+		transition: border-bottom 0.4s ease;
+		&:hover {
+			border-bottom: 1px solid rgba(74, 74, 74, 0.548);
+			transition: border-bottom 0.4s ease;
+		}
+		&.active {
+			border-bottom: 1px solid black;
+			transition: border-bottom 0.4s ease;
+			font-weight: bold;
+		}
+	}
+}
+
+@media (max-width: 768px) {
+	div.card {
+		height: auto;
+	}
+}
+
+div.card-body {
+	h5 {
+		font-size: 13px;
+	}
+	p.card-text {
+		font-size: 12px;
+	}
+}
+
 @media (min-width:992px) {
 	.skills {
 		margin-left: 13%;
@@ -158,11 +226,6 @@ body {
 		font-size: 100%;
 		text-overflow: clip;
 	}
-
-    .card {
-        height: 40em;
-		width: 100%;
-    }
 }
 
 div#feed {
@@ -211,6 +274,36 @@ div#feed {
 		content: "nerd";
 	}
   }
+
+//Projects
+div.mySwiper {
+	width: 100%;
+	div.swiper-wrapper {
+		width: 100%;
+		div.swiper-slide {
+			margin: 2rem 0;
+			div.flex-container {
+				width: 90%;
+				margin: 0 auto;
+				box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+				border-radius: 5px;
+				height: 300px;
+			}
+			img {
+				width: 100%;
+				height: 100%;
+				border-top-left-radius: 5px;
+				border-bottom-left-radius: 5px;
+			}
+			div.content {
+				background-color: white;
+				padding: 2.5rem;
+				border-top-right-radius: 5px;
+				border-bottom-right-radius: 5px;
+			}
+		}
+	}
+}
 
 
 

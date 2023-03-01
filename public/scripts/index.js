@@ -1,26 +1,12 @@
 const init = () => {
-    //initial check for dark desktop
-	if (window.matchMedia('(prefers-color-scheme: dark)').matches && document.cookie != 'light') {
-		darkMode();
-	} else {
-		lightMode();
-	}
-    //if user switches to dark mode via personal desktop
-	window.matchMedia('(prefers-color-scheme: dark)')
-		.addEventListener('change', event => {
-			if (event.matches && document.cookie != 'light') {
-				darkMode();
-			}
-		});
-	window.matchMedia('(prefers-color-scheme: light)' && document.cookie != 'dark')
-		.addEventListener('change', event => {
-			if (event.matches) {
-				lightMode();
-			}
-		});
+	    //initial check for dark desktop
+		if (document.cookie == 'dark') {
+			darkMode();
+		} else {
+			lightMode();
+		}
 };
 window.onload = init;
-
 
 const themeChange = () => {
 	if (document.body.classList.contains('dark')) {
